@@ -1,0 +1,14 @@
+feature,feature_cn,shap_importance
+pain_site_count,疼痛部位数量,0.30926920133006036
+sleep_hours_night,夜间睡眠时长,0.294985342094694
+self_rated_health,自评健康,0.28677151587937866
+IADL_total,IADL总分,0.19893263020593074
+ADL_total,ADL总分,0.1683481959465904
+childhood_health,童年健康状况,0.13985540918617306
+edu_years,受教育年限,0.13030483390102793
+age,年龄,0.10516869989075311
+gender,性别,0.09630097919412217
+residence_type,居住地类型,0.09219257496783283
+chronic_count,慢性病数量,0.04982875037221888
+stomach_arthritis_pair,胃病-关节炎共病,0.004205977628037127
+arthritis_asthma_pair,关节炎-哮喘共病,0.0007366990001234547
