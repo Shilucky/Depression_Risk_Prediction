@@ -1124,7 +1124,7 @@ def render_prediction_result():
         fig.add_annotation(
             text=f"{probability:.0%}",
             x=0.5, y=0.5,
-            font=dict(size=24, weight='bold'),
+            font=dict(size=24),
             showarrow=False
         )
         fig.update_layout(
