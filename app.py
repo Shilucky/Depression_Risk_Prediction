@@ -1401,24 +1401,45 @@ def render_history_page():
                     st.success("记录已删除")
                     st.rerun()
             with btn_col2:
-                if st.button("📄 PDF", key=f"pdf_{record_id}", help="导出PDF报告", use_container_width=True):
-                    record_dict = row.to_dict()
-                    with st.spinner("正在生成PDF报告..."):
-                        pdf_data = generate_pdf_report(record_dict)
-                        if pdf_data:
-                            timestamp_str = str(row['timestamp'])
-                            safe_timestamp = timestamp_str.replace(':', '-').replace(' ', '_')
-                            st.download_button(
-                                label="下载PDF",
-                                data=pdf_data,
-                                file_name=f"report_{safe_timestamp}.pdf",
-                                mime="application/pdf",
-                                key=f"download_{record_id}",
-                                help="下载PDF报告",
-                                use_container_width=True
-                            )
-                        else:
-                            st.error("PDF生成失败")
+                # 检查会话状态中是否有PDF数据
+                if f"pdf_data_{record_id}" in st.session_state:
+                    # 如果有PDF数据，直接显示下载按钮
+                    pdf_data = st.session_state[f"pdf_data_{record_id}"]
+                    file_name = st.session_state[f"pdf_file_name_{record_id}"]
+                    
+                    # 显示下载按钮
+                    st.download_button(
+                        label="下载PDF",
+                        data=pdf_data,
+                        file_name=file_name,
+                        mime="application/pdf",
+                        key=f"download_{record_id}",
+                        help="下载PDF报告",
+                        use_container_width=True
+                    )
+                    
+                    # 清理会话状态
+                    del st.session_state[f"pdf_data_{record_id}"]
+                    del st.session_state[f"pdf_file_name_{record_id}"]
+                else:
+                    # 如果没有PDF数据，显示生成按钮
+                    if st.button("📄 PDF", key=f"pdf_{record_id}", help="导出PDF报告", use_container_width=True):
+                        record_dict = row.to_dict()
+                        with st.spinner("正在生成PDF报告..."):
+                            pdf_data = generate_pdf_report(record_dict)
+                            if pdf_data:
+                                timestamp_str = str(row['timestamp'])
+                                safe_timestamp = timestamp_str.replace(':', '-').replace(' ', '_')
+                                file_name = f"report_{safe_timestamp}.pdf"
+                                
+                                # 存储PDF数据到会话状态
+                                st.session_state[f"pdf_data_{record_id}"] = pdf_data
+                                st.session_state[f"pdf_file_name_{record_id}"] = file_name
+                                
+                                # 重新运行以显示下载按钮
+                                st.rerun()
+                            else:
+                                st.error("PDF生成失败")
 
     # 在渲染循环之后，根据所有单选框的实际状态重建 selected_ids
     new_selected = []
@@ -1564,7 +1585,7 @@ def load_shap_data():
 
 def render_global_explanation_page():
     """渲染全局SHAP解释页面"""
-    st.title("� 模型全局解释")
+    st.title("模型全局解释")
     
     # 页面说明
     st.markdown("""
