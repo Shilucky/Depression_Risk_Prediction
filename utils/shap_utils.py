@@ -124,7 +124,7 @@ def create_shap_waterfall_plot(
         shap_values = shap_values.flatten()
 
     # 设置matplotlib支持中文
-    plt.rcParams['font.sans-serif'] = ['DejaVu Sans', 'Arial Unicode MS', 'SimHei', 'WenQuanYi Micro Hei']
+    plt.rcParams['font.sans-serif'] = ['SimHei']  # 使用黑体
     plt.rcParams['axes.unicode_minus'] = False  # 解决负号显示问题
 
     # 将英文特征名称转换为中文
@@ -233,10 +233,6 @@ def generate_feature_importance_bar(
     if shap_values is None or len(shap_values) == 0:
         return None
 
-    # 设置matplotlib支持中文
-    plt.rcParams['font.sans-serif'] = ['DejaVu Sans', 'Arial Unicode MS', 'SimHei', 'WenQuanYi Micro Hei']
-    plt.rcParams['axes.unicode_minus'] = False  # 解决负号显示问题
-
     mean_abs_shap = np.mean(np.abs(shap_values), axis=0)
     indices = np.argsort(mean_abs_shap)[::-1]
     sorted_names = [feature_names[i] for i in indices]
@@ -282,10 +278,6 @@ def generate_dependence_plot(
     if feature_name not in X_sample.columns:
         print(f"特征 {feature_name} 不存在于数据中")
         return None
-
-    # 设置matplotlib支持中文
-    plt.rcParams['font.sans-serif'] = ['DejaVu Sans', 'Arial Unicode MS', 'SimHei', 'WenQuanYi Micro Hei']
-    plt.rcParams['axes.unicode_minus'] = False  # 解决负号显示问题
 
     try:
         plt.figure(figsize=figsize)
