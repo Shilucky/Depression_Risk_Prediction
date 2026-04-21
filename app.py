@@ -1724,128 +1724,255 @@ def render_global_explanation_page():
 
 
 def render_instructions_page():
-    """渲染使用说明页面 - 优化版（卡片式 + 可折叠）"""
+    """渲染使用说明页面 - 现代化设计"""
     st.title("ℹ️ 使用说明")
 
-    # 系统简介（渐变卡片，醒目）
+    # 系统简介（现代化渐变卡片）
     st.markdown("""
-    <div style="background: linear-gradient(135deg, #1e88e5 0%, #1565c0 100%); padding: 20px; border-radius: 15px; margin-bottom: 25px;">
-        <h2 style="color: white; margin: 0 0 10px 0;">📋 系统简介</h2>
-        <p style="color: white; margin: 0; line-height: 1.6;">
+    <div style="background: linear-gradient(135deg, #1e88e5 0%, #64b5f6 100%); padding: 25px; border-radius: 16px; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(30, 136, 229, 0.2);">
+        <div style="display: flex; align-items: center; margin-bottom: 15px;">
+            <div style="background-color: rgba(255, 255, 255, 0.2); border-radius: 50%; padding: 12px; margin-right: 15px;">
+                <i class="fas fa-brain" style="font-size: 24px; color: white;"></i>
+            </div>
+            <h2 style="color: white; margin: 0; font-size: 24px;">系统简介</h2>
+        </div>
+        <p style="color: white; margin: 0; line-height: 1.7; font-size: 16px;">
             本系统基于 <strong>中国健康与养老追踪调查(CHARLS)</strong> 数据构建的 CatBoost 机器学习模型，
             专为社区中老年人设计。通过 <strong>13项简易健康指标</strong>，快速评估抑郁风险，并提供个性化建议。
         </p>
+        <div style="margin-top: 15px; display: flex; gap: 10px;">
+            <span style="background-color: rgba(255, 255, 255, 0.2); color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px;">科学评估</span>
+            <span style="background-color: rgba(255, 255, 255, 0.2); color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px;">快速筛查</span>
+            <span style="background-color: rgba(255, 255, 255, 0.2); color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px;">个性化建议</span>
+        </div>
     </div>
     """, unsafe_allow_html=True)
 
-    # 使用两列布局
-    col_left, col_right = st.columns(2, gap="medium")
+    # 操作步骤（现代化步骤指示器）
+    st.markdown("## 📝 使用步骤")
+    steps = [
+        {
+            "icon": "👤",
+            "title": "填写健康信息",
+            "content": "根据页面提示填写基本信息、健康状况、功能状态、生活方式和慢性病信息"
+        },
+        {
+            "icon": "🚀",
+            "title": "开始评估",
+            "content": "点击「开始评估」按钮，系统将分析您的健康数据"
+        },
+        {
+            "icon": "📊",
+            "title": "查看结果",
+            "content": "查看风险评估结果、主要影响因素分析和个性化建议"
+        },
+        {
+            "icon": "💾",
+            "title": "保存记录",
+            "content": "可选择保存评估结果到历史记录，方便后续查看和对比"
+        }
+    ]
 
-    with col_left:
-        st.markdown("""
-        <div style="background-color: #f8f9fa; border-radius: 12px; padding: 15px; margin-bottom: 20px; border-left: 5px solid #1e88e5;">
-            <h3 style="margin: 0 0 10px 0;">📝 填写健康信息</h3>
-        </div>
-        """, unsafe_allow_html=True)
+    # 步骤卡片
+    step_container = st.container()
+    with step_container:
+        for i, step in enumerate(steps, 1):
+            st.markdown(f"""
+            <div style="display: flex; align-items: flex-start; background-color: #f8f9fa; border-radius: 12px; padding: 20px; margin-bottom: 15px; border: 1px solid #e0e0e0; transition: all 0.3s ease; hover: box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                <div style="background-color: #1e88e5; color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: bold; margin-right: 15px; flex-shrink: 0;">
+                    {i}
+                </div>
+                <div style="flex: 1;">
+                    <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                        <span style="font-size: 20px; margin-right: 10px;">{step['icon']}</span>
+                        <h3 style="margin: 0; font-size: 18px; color: #333;">{step['title']}</h3>
+                    </div>
+                    <p style="margin: 0; color: #666; line-height: 1.5;">{step['content']}</p>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
 
+    # 详细填写指南（可折叠部分）
+    st.markdown("## 📋 详细填写指南")
+    guide_container = st.container()
+    with guide_container:
         with st.expander("👤 基本信息", expanded=True):
             st.markdown("""
-            - **年龄**：45-120岁
-            - **性别**：男 / 女
-            - **教育程度**：自动转换为受教育年限
-            - **居住地**：城镇 / 农村
-            """)
+            <div style="background-color: #f0f8ff; border-radius: 10px; padding: 15px;">
+                <ul style="margin: 0; padding-left: 20px;">
+                    <li><strong>年龄</strong>：请输入45-120岁之间的实际年龄</li>
+                    <li><strong>性别</strong>：选择「男」或「女」</li>
+                    <li><strong>教育程度</strong>：选择您的最高教育水平，系统会自动转换为受教育年限</li>
+                    <li><strong>居住地</strong>：选择「城镇」或「农村」</li>
+                </ul>
+            </div>
+            """, unsafe_allow_html=True)
 
         with st.expander("💪 健康状况", expanded=False):
             st.markdown("""
-            - **自评健康**：很好 / 好 / 一般 / 不好 / 很不好
-            - **童年健康**：极好 / 很好 / 好 / 一般 / 不好
-            """)
+            <div style="background-color: #f0fff4; border-radius: 10px; padding: 15px;">
+                <ul style="margin: 0; padding-left: 20px;">
+                    <li><strong>自评健康</strong>：根据您的整体健康状况选择「很好」、「好」、「一般」、「不好」或「很不好」</li>
+                    <li><strong>童年健康</strong>：回忆您童年时期的健康状况，选择「极好」、「很好」、「好」、「一般」或「不好」</li>
+                </ul>
+            </div>
+            """, unsafe_allow_html=True)
 
         with st.expander("🏃 功能状态", expanded=False):
             st.markdown("""
-            - **ADL总分** (0-90) – 点击「速测」按钮辅助填写
-            - **IADL总分** (0-6) – 点击「速测」按钮辅助填写
-            """)
+            <div style="background-color: #fff8e1; border-radius: 10px; padding: 15px;">
+                <ul style="margin: 0; padding-left: 20px;">
+                    <li><strong>ADL总分</strong>：日常生活活动能力总分（0-90分），点击「速测」按钮可辅助评估</li>
+                    <li><strong>IADL总分</strong>：工具性日常生活活动能力总分（0-6分），点击「速测」按钮可辅助评估</li>
+                </ul>
+                <div style="margin-top: 10px; padding: 10px; background-color: #fff; border-radius: 8px; border-left: 4px solid #ff9800;">
+                    <p style="margin: 0; font-size: 14px; color: #666;"><strong>提示</strong>：ADL和IADL速测可以帮助您更准确地评估功能状态</p>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
 
         with st.expander("🌙 生活方式", expanded=False):
             st.markdown("""
-            - **夜间睡眠时长** (0-12小时)
-            - **疼痛部位**：可多选，自动计数
-            """)
+            <div style="background-color: #f3e5f5; border-radius: 10px; padding: 15px;">
+                <ul style="margin: 0; padding-left: 20px;">
+                    <li><strong>夜间睡眠时长</strong>：使用滑块选择您的平均夜间睡眠时长（0-12小时）</li>
+                    <li><strong>疼痛部位</strong>：选择您当前存在疼痛的部位，可多选，系统会自动计数</li>
+                </ul>
+            </div>
+            """, unsafe_allow_html=True)
 
         with st.expander("🏥 慢性病管理", expanded=False):
             st.markdown("""
-            - **慢性病**：可多选，自动计数
-            - **共病簇**：自动检测胃病‑关节炎、关节炎‑哮喘
-            """)
+            <div style="background-color: #e8f5e9; border-radius: 10px; padding: 15px;">
+                <ul style="margin: 0; padding-left: 20px;">
+                    <li><strong>慢性病</strong>：选择您目前患有的慢性病，可多选，系统会自动计数</li>
+                    <li><strong>共病簇</strong>：系统会自动检测「胃病-关节炎」和「关节炎-哮喘」共病情况</li>
+                </ul>
+                <div style="margin-top: 10px; padding: 10px; background-color: #fff; border-radius: 8px; border-left: 4px solid #4caf50;">
+                    <p style="margin: 0; font-size: 14px; color: #666;"><strong>提示</strong>：共病簇是指两种或多种慢性病同时存在的情况，可能对健康产生更大影响</p>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
 
+    # 评估结果说明
+    st.markdown("## 📊 评估结果说明")
+    result_container = st.container()
+    with result_container:
         st.markdown("""
-        <div style="background-color: #f8f9fa; border-radius: 12px; padding: 15px; margin: 20px 0; border-left: 5px solid #4caf50;">
-            <h3 style="margin: 0 0 10px 0;">🚀 开始评估</h3>
+        <div style="background-color: #f8f9fa; border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 1px solid #e0e0e0;">
+            <h3 style="margin: 0 0 15px 0; color: #333;">评估结果包含以下内容：</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
+                <div style="background-color: #e3f2fd; border-radius: 8px; padding: 15px;">
+                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <i class="fas fa-chart-pie" style="font-size: 20px; color: #1976d2; margin-right: 10px;"></i>
+                        <h4 style="margin: 0; color: #1976d2;">风险概率</h4>
+                    </div>
+                    <p style="margin: 0; color: #666; font-size: 14px;">显示您的抑郁风险概率（0~1），数值越高风险越大</p>
+                </div>
+                <div style="background-color: #e8f5e9; border-radius: 8px; padding: 15px;">
+                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <i class="fas fa-tag" style="font-size: 20px; color: #388e3c; margin-right: 10px;"></i>
+                        <h4 style="margin: 0; color: #388e3c;">风险类别</h4>
+                    </div>
+                    <p style="margin: 0; color: #666; font-size: 14px;">根据概率值判断：≥0.492 为「有风险」，否则为「无风险」</p>
+                </div>
+                <div style="background-color: #fff3e0; border-radius: 8px; padding: 15px;">
+                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <i class="fas fa-chart-bar" style="font-size: 20px; color: #f57c00; margin-right: 10px;"></i>
+                        <h4 style="margin: 0; color: #f57c00;">影响因素分析</h4>
+                    </div>
+                    <p style="margin: 0; color: #666; font-size: 14px;">通过SHAP瀑布图展示各因素对风险评估的影响程度</p>
+                </div>
+                <div style="background-color: #f3e5f5; border-radius: 8px; padding: 15px;">
+                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <i class="fas fa-lightbulb" style="font-size: 20px; color: #7b1fa2; margin-right: 10px;"></i>
+                        <h4 style="margin: 0; color: #7b1fa2;">个性化建议</h4>
+                    </div>
+                    <p style="margin: 0; color: #666; font-size: 14px;">根据评估结果提供针对性的健康建议</p>
+                </div>
+            </div>
         </div>
         """, unsafe_allow_html=True)
-        st.markdown("""
-        点击 **「开始评估」** 按钮，系统将：
-        1. 验证输入数据
-        2. 计算抑郁风险概率
-        3. 生成 SHAP 可解释性分析
-        4. 提供个性化建议
-        """)
 
-    with col_right:
-        st.markdown("""
-        <div style="background-color: #f8f9fa; border-radius: 12px; padding: 15px; margin-bottom: 20px; border-left: 5px solid #ff9800;">
-            <h3 style="margin: 0 0 10px 0;">📊 评估结果</h3>
-        </div>
-        """, unsafe_allow_html=True)
-        st.markdown("""
-        - **风险概率** (0~1)  
-        - **风险类别**：有风险 (≥0.492) / 无风险  
-        - **SHAP 瀑布图**：直观显示主要影响因素  
-        - **个性化建议**：基于风险评估生成
-        """)
-
-        st.markdown("""
-        <div style="background-color: #f8f9fa; border-radius: 12px; padding: 15px; margin-bottom: 20px; border-left: 5px solid #9c27b0;">
-            <h3 style="margin: 0 0 10px 0;">📂 历史记录</h3>
-        </div>
-        """, unsafe_allow_html=True)
-        st.markdown("""
-        - 查看、筛选、搜索评估记录
-        - 导出 CSV 文件
-        - 删除单条或全部记录
-        """)
-
-        # 重要说明和技术信息合并
-        st.markdown("""
-        <div style="background-color: #fff3e0; border-radius: 12px; padding: 15px; margin-bottom: 20px; border-left: 5px solid #ff9800;">
-            <h3 style="margin: 0 0 10px 0;">⚠️ 重要说明</h3>
-            <p><strong>数据隐私</strong>：完全匿名，不存储个人身份信息，数据仅存储在本地。</p>
-            <p><strong>医疗声明</strong>：本系统为筛查工具，不替代专业诊断，如有不适请及时就医。</p>
-        </div>
-        """, unsafe_allow_html=True)
-
-        with st.expander("🛠️ 技术信息", expanded=False):
+    # 重要说明和技术信息
+    st.markdown("## ⚠️ 重要说明")
+    info_container = st.container()
+    with info_container:
+        col1, col2 = st.columns(2, gap="medium")
+        with col1:
             st.markdown("""
-            - **模型**：CatBoost 分类器
-            - **AUC**：0.7805
-            - **阈值**：0.492 (Youden 指数)
-            - **特征数量**：13 个健康指标
-            - **更新日期**：2026年
-            """)
+            <div style="background-color: #fff3e0; border-radius: 12px; padding: 20px; height: 100%; border-left: 5px solid #ff9800;">
+                <h3 style="margin: 0 0 15px 0; color: #e65100;">📋 医疗声明</h3>
+                <ul style="margin: 0; padding-left: 20px; color: #666; line-height: 1.6;">
+                    <li>本系统仅为<strong>抑郁风险初步筛查工具</strong></li>
+                    <li>评估结果<strong>不替代专业医疗诊断</strong></li>
+                    <li>如有身体不适或情绪困扰，请及时前往社区卫生服务中心或心理科进一步检查</li>
+                    <li>本系统不存储个人身份信息，所有数据均为匿名处理</li>
+                </ul>
+            </div>
+            """, unsafe_allow_html=True)
+        with col2:
+            st.markdown("""
+            <div style="background-color: #e8f5e9; border-radius: 12px; padding: 20px; height: 100%; border-left: 5px solid #4caf50;">
+                <h3 style="margin: 0 0 15px 0; color: #2e7d32;">🛠️ 技术信息</h3>
+                <ul style="margin: 0; padding-left: 20px; color: #666; line-height: 1.6;">
+                    <li><strong>模型</strong>：CatBoost 分类器</li>
+                    <li><strong>AUC</strong>：0.7805</li>
+                    <li><strong>阈值</strong>：0.492 (Youden 指数)</li>
+                    <li><strong>特征数量</strong>：13 个健康指标</li>
+                    <li><strong>更新日期</strong>：2026年</li>
+                </ul>
+            </div>
+            """, unsafe_allow_html=True)
 
-        st.markdown("""
-        <div style="background-color: #e8f5e9; border-radius: 12px; padding: 15px;">
-            <h3 style="margin: 0 0 10px 0;">📞 技术支持</h3>
-            <p>📧 support@example.com<br>📞 400-xxx-xxxx</p>
-            <hr>
-            <p style="font-size: 12px; color: #666; text-align: center;">版本 1.0.0 | 最后更新: 2026年</p>
-        </div>
-        """, unsafe_allow_html=True)
+    # 常见问题
+    st.markdown("## ❓ 常见问题")
+    faq_container = st.container()
+    with faq_container:
+        faqs = [
+            {
+                "question": "评估需要多长时间？",
+                "answer": "填写完整信息通常需要2-3分钟，评估过程仅需几秒钟。"
+            },
+            {
+                "question": "数据会被保存吗？",
+                "answer": "系统默认不会保存个人身份信息，评估结果可选择保存到本地数据库，方便后续查看。"
+            },
+            {
+                "question": "如何理解SHAP分析结果？",
+                "answer": "SHAP值表示各因素对预测结果的贡献程度，正值表示增加风险，负值表示降低风险，绝对值越大影响越大。"
+            },
+            {
+                "question": "评估结果准确吗？",
+                "answer": "本系统基于科学研究数据开发，具有较好的预测能力，但最终诊断仍需专业医生确认。"
+            }
+        ]
+        for faq in faqs:
+            with st.expander(faq["question"]):
+                st.markdown(f"<p style='color: #666; line-height: 1.6;'>{faq['answer']}</p>", unsafe_allow_html=True)
 
     # 快速体验提示
-    st.info("💡 **快速体验**：侧边栏点击「高风险示例」或「低风险示例」，系统将自动填充数据并开始评估。")
+    st.markdown("""
+    <div style="background-color: #e3f2fd; border-radius: 12px; padding: 20px; margin-top: 30px; display: flex; align-items: center;">
+        <div style="background-color: #1976d2; color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px;">
+            <i class="fas fa-lightbulb" style="font-size: 20px;"></i>
+        </div>
+        <div>
+            <h3 style="margin: 0 0 5px 0; color: #1976d2;">💡 快速体验</h3>
+            <p style="margin: 0; color: #666;">侧边栏点击「高风险示例」或「低风险示例」，系统将自动填充数据并开始评估。</p>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # 页脚信息
+    st.markdown("""
+    <div style="background-color: #f8f9fa; border-radius: 12px; padding: 20px; margin-top: 30px; text-align: center;">
+        <h3 style="margin: 0 0 15px 0; color: #333;">📞 技术支持</h3>
+        <p style="margin: 0 0 10px 0; color: #666;">📧 support@example.com | 📞 400-xxx-xxxx</p>
+        <hr style="margin: 15px 0;">
+        <p style="margin: 0; font-size: 14px; color: #888;">版本 1.0.0 | © 2026 抑郁风险预警系统</p>
+    </div>
+    """, unsafe_allow_html=True)
 
 
 def load_example_data(high_risk: bool = True):
