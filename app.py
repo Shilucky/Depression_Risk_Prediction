@@ -16,10 +16,36 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Tuple, Optional
 import shap
 import matplotlib.pyplot as plt
+import matplotlib.font_manager as fm
 import plotly.graph_objects as go
 from io import BytesIO
 import base64
 import uuid
+
+
+def set_matplotlib_chinese_font():
+    """自动设置支持中文的字体"""
+    # 尝试查找可用的中文字体
+    font_list = [
+        'WenQuanYi Micro Hei',    # Linux 文泉驿
+        'Noto Sans CJK SC',       # 思源黑体
+        'SimHei',                 # Windows
+        'STHeiti',                # macOS
+        'Microsoft YaHei'         # Windows 雅黑
+    ]
+    available_fonts = set(f.name for f in fm.fontManager.ttflist)
+    for font in font_list:
+        if font in available_fonts:
+            plt.rcParams['font.sans-serif'] = [font, 'DejaVu Sans']
+            break
+    else:
+        # 如果都没找到，尝试使用系统默认中文字体（可能失败）
+        plt.rcParams['font.sans-serif'] = ['sans-serif']
+    plt.rcParams['axes.unicode_minus'] = False
+
+
+# 在程序入口调用
+set_matplotlib_chinese_font()
 
 # 设置页面配置
 st.set_page_config(
@@ -1206,7 +1232,7 @@ def render_prediction_result():
                 st.warning(f"无法生成交互式SHAP图: {str(e)}")
                 # 回退到静态图表
                 import matplotlib.pyplot as plt
-                plt.rcParams['font.sans-serif'] = ['SimHei']  # 使用黑体
+                # 使用全局字体设置
                 plt.rcParams['axes.unicode_minus'] = False  # 解决负号显示问题
                 
                 # 创建图表
@@ -1603,8 +1629,7 @@ def render_global_explanation_page():
             import matplotlib.pyplot as plt
             import plotly.express as px
             
-            # 设置中文字体
-            plt.rcParams['font.sans-serif'] = ['SimHei']  # 使用黑体
+            # 使用全局字体设置
             plt.rcParams['axes.unicode_minus'] = False  # 解决负号显示问题
             
             # 加载SHAP数据（使用缓存）
