@@ -307,14 +307,12 @@ def render_adl_popover():
 
         total_score = sum(scores.values())
 
-        col1, col2, col3 = st.columns([1, 2, 1])
-        with col2:
-            st.markdown('<div class="adl-apply-button">', unsafe_allow_html=True)
-            if st.button("✅ 应用ADL总分", type="primary", use_container_width=True, key="adl_apply_btn"):
-                st.session_state.form_data['ADL_total'] = total_score
-                st.success(f"已设置ADL总分为: {total_score}")
-                st.rerun()
-            st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown('<div class="adl-apply-button">', unsafe_allow_html=True)
+        if st.button("✅ 应用ADL总分", type="primary", use_container_width=True, key="adl_apply_btn"):
+            st.session_state.form_data['ADL_total'] = total_score
+            st.success(f"已设置ADL总分为: {total_score}")
+            st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
 
         st.metric("ADL总分", total_score)
 
@@ -342,14 +340,12 @@ def render_iadl_popover():
         # 计算总分：无困难=1分，有困难=0分
         total_score = sum([0 if difficulties[item] else 1 for item in iadl_items])
 
-        col1, col2, col3 = st.columns([1, 2, 1])
-        with col2:
-            st.markdown('<div class="iadl-apply-button">', unsafe_allow_html=True)
-            if st.button("✅ 应用IADL总分", type="primary", use_container_width=True, key="iadl_apply_btn"):
-                st.session_state.form_data['IADL_total'] = total_score
-                st.success(f"已设置IADL总分为: {total_score}")
-                st.rerun()
-            st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown('<div class="iadl-apply-button">', unsafe_allow_html=True)
+        if st.button("✅ 应用IADL总分", type="primary", use_container_width=True, key="iadl_apply_btn"):
+            st.session_state.form_data['IADL_total'] = total_score
+            st.success(f"已设置IADL总分为: {total_score}")
+            st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
 
         st.metric("IADL总分", total_score)
 
