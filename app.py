@@ -1865,18 +1865,29 @@ def render_global_explanation_page():
                     help="选择一个特征查看其与SHAP值的关系"
                 )
                 
-                # 提取SHAP值
-                shap_values = data['shap_df'][data['feature_names']].values
+                # 尝试加载预先生成的依赖图
+                import os
+                shap_dir = data['shap_dir']
+                dependence_image_path = os.path.join(shap_dir, f"shap_dependence_{selected_feature}.png")
                 
-                # 生成依赖图
-                from utils.shap_utils import generate_dependence_plot
-                fig_dependence = generate_dependence_plot(
-                    shap_values, data['X_sample'], selected_feature, feature_names_cn
-                )
-                if fig_dependence:
-                    st.pyplot(fig_dependence)
+                if os.path.exists(dependence_image_path):
+                    # 直接显示预先生成的图片（图片上已自带标题）
+                    st.image(dependence_image_path)
                 else:
-                    st.warning("无法生成依赖图，请检查数据格式")
+                    # 如果预先生成的图片不存在，回退到动态生成
+                    st.warning("预先生成的依赖图不存在，正在动态生成...")
+                    # 提取SHAP值
+                    shap_values = data['shap_df'][data['feature_names']].values
+                    
+                    # 生成依赖图
+                    from utils.shap_utils import generate_dependence_plot
+                    fig_dependence = generate_dependence_plot(
+                        shap_values, data['X_sample'], selected_feature, feature_names_cn
+                    )
+                    if fig_dependence:
+                        st.pyplot(fig_dependence)
+                    else:
+                        st.warning("无法生成依赖图，请检查数据格式")
             else:
                 st.warning("SHAP值文件或测试数据文件不存在")
             
