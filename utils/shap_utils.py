@@ -123,8 +123,7 @@ def create_shap_waterfall_plot(
     if len(shap_values.shape) > 1:
         shap_values = shap_values.flatten()
 
-    # 设置matplotlib支持中文
-    plt.rcParams['font.sans-serif'] = ['SimHei']  # 使用黑体
+    # 使用全局字体设置
     plt.rcParams['axes.unicode_minus'] = False  # 解决负号显示问题
 
     # 将英文特征名称转换为中文

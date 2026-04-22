@@ -1,0 +1,92 @@
+# 抑郁风险预警系统配置文件
+
+# 风险阈值
+risk_threshold = 0.492
+
+# 模型配置
+[model]
+model_path = "models/CatBoost_F2_v1_with_threshold.pkl"
+
+# SHAP分析结果路径
+[shap]
+local_shap_dir = "shap_results"
+original_shap_dir = "D:\\AAA毕业\\AAA毕业设计\\3Ending\\主实验-二分类\\机器学习-二分类\\output\\evaluation\\shap"
+local_test_data_path = "shap_results/X_test.csv"
+original_test_data_path = "D:\\AAA毕业\\AAA毕业设计\\3Ending\\主实验-二分类\\机器学习-二分类\\output\\data\\X_test.csv"
+
+# 默认值
+[default_values]
+age = 65
+gender = "女"
+education_level = "初中"
+residence_type = "城镇"
+self_rated_health = "好"
+childhood_health = "好"
+pain_sites = []
+sleep_hours_night = 7.0
+ADL_total = 90
+IADL_total = 6
+chronic_diseases = []
+stomach_arthritis_pair = false
+arthritis_asthma_pair = false
+
+# 特征配置
+[features]
+feature_order = [
+    "self_rated_health", "pain_site_count", "sleep_hours_night",
+    "IADL_total", "ADL_total", "edu_years", "childhood_health",
+    "residence_type", "gender", "chronic_count",
+    "stomach_arthritis_pair", "arthritis_asthma_pair", "age"
+]
+
+# 特征名称映射
+[feature_names_cn]
+gender = "性别"
+age = "年龄"
+edu_years = "受教育年限"
+residence_type = "居住地类型"
+self_rated_health = "自评健康"
+childhood_health = "童年健康"
+pain_site_count = "疼痛部位数量"
+ADL_total = "ADL总分"
+IADL_total = "IADL总分"
+chronic_count = "慢性病数量"
+stomach_arthritis_pair = "胃病-关节炎共病"
+arthritis_asthma_pair = "关节炎-哮喘共病"
+sleep_hours_night = "夜间睡眠时长"
+
+# 教育程度映射
+[education_map]
+"未上过学" = 0
+"小学（未毕业）" = 3
+"小学" = 6
+"初中" = 9
+"高中/中专/技校" = 12
+"大专" = 15
+"本科" = 16
+"硕士" = 19
+"博士" = 22
+
+# 健康选项
+[options]
+health_options = ["很好", "好", "一般", "不好", "很不好"]
+health_options_childhood = ["极好", "很好", "好", "一般", "不好"]
+pain_sites = [
+    "头", "肩", "臂", "腕", "手指", "胸", "胃",
+    "背", "腰", "臀", "腿", "膝", "踝", "脚趾", "颈", "其他"
+]
+chronic_diseases = [
+    "高血压", "血脂异常", "糖尿病", "癌症", "慢性肺病",
+    "肝病", "心脏病", "中风", "肾病", "胃病",
+    "情感及精神问题", "记忆相关疾病", "关节炎或风湿病", "哮喘"
+]
+
+# 共病簇映射
+[comorbidity_map]
+stomach_arthritis = ["胃病", "关节炎或风湿病"]
+arthritis_asthma = ["关节炎或风湿病", "哮喘"]
+
+# 主题配置
+[theme]
+base = "light"
+primaryColor = "#1a73e8"
