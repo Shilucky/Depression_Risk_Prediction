@@ -21,6 +21,7 @@ import plotly.graph_objects as go
 from io import BytesIO
 import base64
 import uuid
+import toml
 
 
 def set_matplotlib_chinese_font():
@@ -44,8 +45,104 @@ def set_matplotlib_chinese_font():
     plt.rcParams['axes.unicode_minus'] = False
 
 
+# 加载配置文件
+def load_config():
+    """加载配置文件"""
+    config_path = os.path.join(os.path.dirname(__file__), 'config.toml')
+    try:
+        with open(config_path, 'r', encoding='utf-8') as f:
+            config = toml.load(f)
+        return config
+    except Exception as e:
+        st.error(f"加载配置文件失败: {str(e)}")
+        # 返回默认配置
+        return {
+            'risk_threshold': 0.492,
+            'model': {'model_path': 'models/CatBoost_F2_v1_with_threshold.pkl'},
+            'shap': {
+                'local_shap_dir': 'shap_results',
+                'original_shap_dir': 'D:\\AAA毕业\\AAA毕业设计\\3Ending\\主实验-二分类\\机器学习-二分类\\output\\evaluation\\shap',
+                'local_test_data_path': 'shap_results/X_test.csv',
+                'original_test_data_path': 'D:\\AAA毕业\\AAA毕业设计\\3Ending\\主实验-二分类\\机器学习-二分类\\output\\data\\X_test.csv'
+            },
+            'default_values': {
+                'age': 65,
+                'gender': '女',
+                'education_level': '初中',
+                'residence_type': '城镇',
+                'self_rated_health': '好',
+                'childhood_health': '好',
+                'pain_sites': [],
+                'sleep_hours_night': 7.0,
+                'ADL_total': 90,
+                'IADL_total': 6,
+                'chronic_diseases': [],
+                'stomach_arthritis_pair': False,
+                'arthritis_asthma_pair': False
+            },
+            'features': {
+                'feature_order': [
+                    'self_rated_health', 'pain_site_count', 'sleep_hours_night',
+                    'IADL_total', 'ADL_total', 'edu_years', 'childhood_health',
+                    'residence_type', 'gender', 'chronic_count',
+                    'stomach_arthritis_pair', 'arthritis_asthma_pair', 'age'
+                ]
+            },
+            'feature_names_cn': {
+                'gender': '性别',
+                'age': '年龄',
+                'edu_years': '受教育年限',
+                'residence_type': '居住地类型',
+                'self_rated_health': '自评健康',
+                'childhood_health': '童年健康',
+                'pain_site_count': '疼痛部位数量',
+                'ADL_total': 'ADL总分',
+                'IADL_total': 'IADL总分',
+                'chronic_count': '慢性病数量',
+                'stomach_arthritis_pair': '胃病-关节炎共病',
+                'arthritis_asthma_pair': '关节炎-哮喘共病',
+                'sleep_hours_night': '夜间睡眠时长'
+            },
+            'education_map': {
+                '未上过学': 0,
+                '小学（未毕业）': 3,
+                '小学': 6,
+                '初中': 9,
+                '高中/中专/技校': 12,
+                '大专': 15,
+                '本科': 16,
+                '硕士': 19,
+                '博士': 22
+            },
+            'options': {
+                'health_options': ['很好', '好', '一般', '不好', '很不好'],
+                'health_options_childhood': ['极好', '很好', '好', '一般', '不好'],
+                'pain_sites': [
+                    '头', '肩', '臂', '腕', '手指', '胸', '胃',
+                    '背', '腰', '臀', '腿', '膝', '踝', '脚趾', '颈', '其他'
+                ],
+                'chronic_diseases': [
+                    '高血压', '血脂异常', '糖尿病', '癌症', '慢性肺病',
+                    '肝病', '心脏病', '中风', '肾病', '胃病',
+                    '情感及精神问题', '记忆相关疾病', '关节炎或风湿病', '哮喘'
+                ]
+            },
+            'comorbidity_map': {
+                'stomach_arthritis': ['胃病', '关节炎或风湿病'],
+                'arthritis_asthma': ['关节炎或风湿病', '哮喘']
+            }
+        }
+
+# 加载配置
+CONFIG = load_config()
+
 # 在程序入口调用
 set_matplotlib_chinese_font()
+
+# 从配置文件获取主题设置
+theme_config = CONFIG.get('theme', {})
+theme_base = theme_config.get('base', 'light')
+theme_primary_color = theme_config.get('primaryColor', '#1a73e8')
 
 # 设置页面配置
 st.set_page_config(
@@ -63,6 +160,72 @@ st.set_page_config(
         开发团队: 公共卫生研究团队
         """
     }
+)
+
+# 设置主题
+st.markdown(
+    f"""
+    <style>
+    /* 主题设置 */
+    :root {{
+        --primary-color: {theme_primary_color};
+    }}
+    
+    /* 侧边栏样式 */
+    [data-testid="stSidebar"] {{
+        background-color: #f8f9fa;
+        border-right: 1px solid #e0e0e0;
+    }}
+    
+    /* 标题样式 */
+    [data-testid="stSidebar"] h1 {{
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: {theme_primary_color};
+        margin-bottom: 2rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #e3f2fd;
+        text-align: center;
+    }}
+    
+    /* 导航菜单项样式 */
+    [data-testid="stSidebar"] button[kind="primary"] {{
+        background: linear-gradient(135deg, {theme_primary_color} 0%, #1557b0 100%) !important;
+        color: white !important;
+        border: none !important;
+        box-shadow: 0 3px 6px rgba(26, 115, 232, 0.25) !important;
+        font-weight: 600 !important;
+        letter-spacing: 0.5px;
+    }}
+    
+    /* 主内容区Primary按钮样式 */
+    div[data-testid="stMain"] button[kind="primary"],
+    section.main button[kind="primary"],
+    .stButton > button[kind="primary"] {{
+        background-color: {theme_primary_color} !important;
+        color: white !important;
+        border: none !important;
+        box-shadow: 0 2px 4px rgba(26, 115, 232, 0.2) !important;
+    }}
+    
+    /* Number Input +/- 按钮颜色 */
+    div[data-testid="stNumberInput"] button {{
+        color: {theme_primary_color} !important;
+        border-color: {theme_primary_color} !important;
+    }}
+    
+    /* Radio按钮的外圈和内部圆点 */
+    .stRadio > div[role="radiogroup"] > label > div:first-child {{
+        border-color: {theme_primary_color} !important;
+    }}
+    
+    .stRadio > div[role="radiogroup"] > label:has(input:checked) > div:first-child {{
+        background-color: {theme_primary_color} !important;
+        border-color: {theme_primary_color} !important;
+    }}
+    </style>
+    """,
+    unsafe_allow_html=True
 )
 
 # 导入工具模块
@@ -166,7 +329,7 @@ except ImportError as e:
         return stomach_arthritis, arthritis_asthma
 
     # 定义临时常量避免错误
-    FEATURE_NAMES_CN = {
+    FEATURE_NAMES_CN = CONFIG.get('feature_names_cn', {
         'gender': '性别',
         'age': '年龄',
         'edu_years': '受教育年限',
@@ -180,16 +343,16 @@ except ImportError as e:
         'stomach_arthritis_pair': '胃病-关节炎共病',
         'arthritis_asthma_pair': '关节炎-哮喘共病',
         'sleep_hours_night': '夜间睡眠时长'
-    }
+    })
 
-    FEATURE_ORDER = [
+    FEATURE_ORDER = CONFIG.get('features', {}).get('feature_order', [
         'self_rated_health', 'pain_site_count', 'sleep_hours_night',
         'IADL_total', 'ADL_total', 'edu_years', 'childhood_health',
         'residence_type', 'gender', 'chronic_count',
         'stomach_arthritis_pair', 'arthritis_asthma_pair', 'age'
-    ]
+    ])
 
-    EDUCATION_MAP = {
+    EDUCATION_MAP = CONFIG.get('education_map', {
         "未上过学": 0,
         "小学（未毕业）": 3,
         "小学": 6,
@@ -199,33 +362,33 @@ except ImportError as e:
         "本科": 16,
         "硕士": 19,
         "博士": 22
-    }
+    })
 
-    HEALTH_OPTIONS = ["很好", "好", "一般", "不好", "很不好"]
-    HEALTH_OPTIONS_CHILDHOOD = ["极好", "很好", "好", "一般", "不好"]
+    HEALTH_OPTIONS = CONFIG.get('options', {}).get('health_options', ["很好", "好", "一般", "不好", "很不好"])
+    HEALTH_OPTIONS_CHILDHOOD = CONFIG.get('options', {}).get('health_options_childhood', ["极好", "很好", "好", "一般", "不好"])
 
-    PAIN_SITES = [
+    PAIN_SITES = CONFIG.get('options', {}).get('pain_sites', [
         "头", "肩", "臂", "腕", "手指", "胸", "胃",
         "背", "腰", "臀", "腿", "膝", "踝", "脚趾", "颈", "其他"
-    ]
+    ])
 
-    CHRONIC_DISEASES = [
+    CHRONIC_DISEASES = CONFIG.get('options', {}).get('chronic_diseases', [
         "高血压", "血脂异常", "糖尿病", "癌症", "慢性肺病",
         "肝病", "心脏病", "中风", "肾病", "胃病",
         "情感及精神问题", "记忆相关疾病", "关节炎或风湿病", "哮喘"
-    ]
+    ])
 
 # 共病簇映射
-COMORBIDITY_MAP = {
+COMORBIDITY_MAP = CONFIG.get('comorbidity_map', {
     "stomach_arthritis": ["胃病", "关节炎或风湿病"],
     "arthritis_asthma": ["关节炎或风湿病", "哮喘"]
-}
+})
 
 # 风险阈值
-RISK_THRESHOLD = 0.492  # CatBoost模型最优阈值
+RISK_THRESHOLD = CONFIG.get('risk_threshold', 0.492)  # CatBoost模型最优阈值
 
 # 默认值
-DEFAULT_VALUES = {
+DEFAULT_VALUES = CONFIG.get('default_values', {
     'age': 65,
     'gender': '女',
     'education_level': '初中',
@@ -239,7 +402,7 @@ DEFAULT_VALUES = {
     'chronic_diseases': [],
     'stomach_arthritis_pair': False,
     'arthritis_asthma_pair': False
-}
+})
 
 
 # ========== 工具函数 ==========
@@ -254,8 +417,10 @@ def load_model():
     """加载模型和SHAP解释器"""
     try:
         import os
+        # 从配置文件获取模型路径
+        model_path = CONFIG.get('model', {}).get('model_path', 'models/CatBoost_F2_v1_with_threshold.pkl')
         # 使用绝对路径加载模型文件
-        model_path = os.path.join(os.path.dirname(__file__), 'models', 'CatBoost_F2_v1_with_threshold.pkl')
+        model_path = os.path.join(os.path.dirname(__file__), model_path)
         model_data = joblib.load(model_path)
 
         if isinstance(model_data, dict) and 'model' in model_data:
@@ -488,31 +653,55 @@ def render_sidebar():
             text-align: center;
         }
         
-        /* 导航菜单项样式 - 覆盖Streamlit默认按钮样式 */
-        [data-testid="stSidebar"] button[kind="primary"] {
-            background-color: #1a73e8 !important;
-            color: white !important;
-            border: none !important;
-            box-shadow: 0 2px 4px rgba(26, 115, 232, 0.2) !important;
-        }
-        
-        [data-testid="stSidebar"] button[kind="primary"]:hover {
-            background-color: #1557b0 !important;
-            transform: translateX(4px);
-        }
-        
-        [data-testid="stSidebar"] button[kind="secondary"] {
-            background-color: transparent !important;
-            color: #333 !important;
-            border: 1px solid #e0e0e0 !important;
-        }
-        
-        [data-testid="stSidebar"] button[kind="secondary"]:hover {
-            background-color: #e3f2fd !important;
-            color: #1a73e8 !important;
-            border-color: #1a73e8 !important;
-            transform: translateX(4px);
-        }
+        /* 导航菜单项样式 - 终极强制覆盖版 */ 
+         [data-testid="stSidebar"] button[kind="primary"] { 
+             background: linear-gradient(135deg, #1a73e8 0%, #1557b0 100%) !important; 
+             color: white !important; 
+             border: none !important; 
+             box-shadow: 0 3px 6px rgba(26, 115, 232, 0.25) !important; 
+             font-weight: 600 !important; 
+             letter-spacing: 0.5px; 
+         } 
+         
+         [data-testid="stSidebar"] button[kind="primary"]:hover { 
+             background: linear-gradient(135deg, #1557b0 0%, #0d47a1 100%) !important; 
+             transform: translateX(4px); 
+             box-shadow: 0 4px 10px rgba(26, 115, 232, 0.35) !important; 
+         } 
+         
+         /* 强制覆盖侧边栏所有非primary按钮 */ 
+         [data-testid="stSidebar"] .stButton > button, 
+         [data-testid="stSidebar"] button { 
+             background-color: #ffffff !important; 
+             color: #5f6368 !important; 
+             border: 1.5px solid #dadce0 !important; 
+             font-weight: 500 !important; 
+             transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important; 
+         } 
+         
+         [data-testid="stSidebar"] .stButton > button:hover, 
+         [data-testid="stSidebar"] button:hover { 
+             background: linear-gradient(135deg, #e8f0fe 0%, #d2e3fc 100%) !important; 
+             color: #1a73e8 !important; 
+             border-color: #1a73e8 !important; 
+             transform: translateX(4px); 
+             box-shadow: 0 2px 6px rgba(26, 115, 232, 0.15) !important; 
+         } 
+         
+         /* 但要保持高风险和低风险按钮的特殊样式 */ 
+         [data-testid="stButton-high_risk_button"] button, 
+         [data-testid="stButton-high_risk_button"] button:hover { 
+             background: linear-gradient(135deg, #fff5f5 0%, #ffe0e0 100%) !important; 
+             border: 1.5px solid #ffcdd2 !important; 
+             color: #c62828 !important; 
+         } 
+         
+         [data-testid="stButton-low_risk_button"] button, 
+         [data-testid="stButton-low_risk_button"] button:hover { 
+             background: linear-gradient(135deg, #f1f8e9 0%, #e8f5e9 100%) !important; 
+             border: 1.5px solid #c8e6c9 !important; 
+             color: #2e7d32 !important; 
+         }
         
         /* 主内容区Primary按钮样式 - 蓝色（包括开始评估按钮）*/
         div[data-testid="stMain"] button[kind="primary"],
@@ -532,39 +721,20 @@ def render_sidebar():
             box-shadow: 0 4px 8px rgba(26, 115, 232, 0.3) !important;
         }
         
-        /* 高风险按钮样式 */
-        [data-testid="stButton-high_risk_button"] button {
-            background-color: #ffebee !important;
-            border: 1px solid #ffcdd2 !important;
-            color: #c62828 !important;
-            padding: 0.75rem 1rem !important;
-            border-radius: 0.5rem !important;
-            font-weight: 500 !important;
-            transition: all 0.2s ease !important;
-            width: 100% !important;
-            margin: 0.25rem 0 !important;
-        }
-        [data-testid="stButton-high_risk_button"] button:hover {
-            background-color: #ffcdd2 !important;
-            transform: translateX(4px) !important;
-        }
-        
-        /* 低风险按钮样式 */
-        [data-testid="stButton-low_risk_button"] button {
-            background-color: #e8f5e8 !important;
-            border: 1px solid #c8e6c9 !important;
-            color: #2e7d32 !important;
-            padding: 0.75rem 1rem !important;
-            border-radius: 0.5rem !important;
-            font-weight: 500 !important;
-            transition: all 0.2s ease !important;
-            width: 100% !important;
-            margin: 0.25rem 0 !important;
-        }
-        [data-testid="stButton-low_risk_button"] button:hover {
-            background-color: #c8e6c9 !important;
-            transform: translateX(4px) !important;
-        }
+        /* 重置按钮样式优化 */ 
+         [data-testid="stSidebar"] button[key*="reset"], 
+         div[data-testid="stSidebar"] button:has(span:contains("重置")) { 
+             background: linear-gradient(135deg, #f5f5f5 0%, #eeeeee 100%) !important; 
+             color: #616161 !important; 
+             border: 1.5px solid #bdbdbd !important; 
+         } 
+         
+         [data-testid="stSidebar"] button[key*="reset"]:hover, 
+         div[data-testid="stSidebar"] button:has(span:contains("重置")):hover { 
+             background: linear-gradient(135deg, #eeeeee 0%, #e0e0e0 100%) !important; 
+             color: #424242 !important; 
+             border-color: #9e9e9e !important; 
+         }
         
         /* 大字体，适合中老年用户 */
         .stNumberInput input, .stTextInput input, .stSelectbox select, .stRadio label, .stCheckbox label, .stSlider label {
@@ -762,12 +932,25 @@ def render_sidebar():
         st.markdown('''
         <div class="system-info">
             <h3>📊 系统信息</h3>
-            <p>科学评估：基于CatBoost模型</p>
-            <p>快速筛查：仅需2-3分钟</p>
-            <p>解释透明：提供影响因素分析</p>
-            <p>隐私保护：完全匿名，不存储个人信息</p>
-            <p>模型阈值: ''' + str(RISK_THRESHOLD) + '''</p>
-            <p class="version">版本 1.0.0 | © 2026</p>
+            <div style="display: flex; align-items: center; gap: 10px; margin: 8px 0;">
+                <i class="fas fa-flask" style="color: #1a73e8; font-size: 16px;"></i>
+                <p style="margin: 0;">科学评估：基于CatBoost模型</p>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px; margin: 8px 0;">
+                <i class="fas fa-bolt" style="color: #1a73e8; font-size: 16px;"></i>
+                <p style="margin: 0;">快速筛查：仅需2-3分钟</p>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px; margin: 8px 0;">
+                <i class="fas fa-chart-bar" style="color: #1a73e8; font-size: 16px;"></i>
+                <p style="margin: 0;">解释透明：提供影响因素分析</p>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px; margin: 8px 0;">
+                <i class="fas fa-shield-alt" style="color: #1a73e8; font-size: 16px;"></i>
+                <p style="margin: 0;">隐私保护：完全匿名，不存储个人信息</p>
+            </div>
+            <div style="margin-top: 12px; padding-top: 8px; border-top: 1px solid #e0e0e0;">
+                <p class="version">版本 1.0.0 | 2026</p>
+            </div>
         </div>
         ''', unsafe_allow_html=True)
 
@@ -1545,10 +1728,10 @@ def load_shap_data():
     # 获取当前文件所在目录
     current_dir = os.path.dirname(os.path.abspath(__file__))
     
-    # 优先使用本地SHAP分析结果（用于云端部署）
-    local_shap_dir = os.path.join(current_dir, "shap_results")
-    # 原始SHAP分析结果路径
-    original_shap_dir = r"D:\AAA毕业\AAA毕业设计\3Ending\主实验-二分类\机器学习-二分类\output\evaluation\shap"
+    # 从配置文件获取SHAP分析结果路径
+    shap_config = CONFIG.get('shap', {})
+    local_shap_dir = os.path.join(current_dir, shap_config.get('local_shap_dir', 'shap_results'))
+    original_shap_dir = shap_config.get('original_shap_dir', r"D:\AAA毕业\AAA毕业设计\3Ending\主实验-二分类\机器学习-二分类\output\evaluation\shap")
     
     # 选择使用哪个路径
     if os.path.exists(local_shap_dir) and len(os.listdir(local_shap_dir)) > 0:
@@ -1576,8 +1759,8 @@ def load_shap_data():
         data['feature_names'] = [col for col in data['shap_df'].columns if col not in ['predicted_probability', 'sample_id']]
         
         # 加载原始测试数据
-        local_test_data_path = os.path.join(local_shap_dir, "X_test.csv")
-        original_test_data_path = r"D:\AAA毕业\AAA毕业设计\3Ending\主实验-二分类\机器学习-二分类\output\data\X_test.csv"
+        local_test_data_path = os.path.join(current_dir, shap_config.get('local_test_data_path', 'shap_results/X_test.csv'))
+        original_test_data_path = shap_config.get('original_test_data_path', r"D:\AAA毕业\AAA毕业设计\3Ending\主实验-二分类\机器学习-二分类\output\data\X_test.csv")
         
         if os.path.exists(local_test_data_path):
             test_data_path = local_test_data_path
@@ -1647,7 +1830,7 @@ def render_global_explanation_page():
                 st.markdown("## 🌍 全局特征重要性")
                 
                 # 显示特征重要性表格
-                st.dataframe(data['shap_importance'][['feature_cn', 'shap_importance']].rename(columns={'feature_cn': '特征名称', 'shap_importance': 'SHAP重要性'}))
+                st.dataframe(data['shap_importance'][['feature_cn', 'shap_importance']].rename(columns={'feature_cn': '特征名称', 'shap_importance': 'SHAP重要性'}), use_container_width=True)
                 
                 # 使用Plotly创建交互式条形图
                 fig = px.bar(
@@ -1698,12 +1881,14 @@ def render_global_explanation_page():
                 st.warning("SHAP值文件或测试数据文件不存在")
             
             # 模型信息
-            st.markdown("## 🛠️ 模型信息")
+            st.markdown("## 🛠️ 模型技术原理")
             st.markdown("""
-            - **模型类型**: CatBoost分类器
+            - **模型类型**: CatBoost分类器（梯度提升决策树）
             - **特征数量**: 13个健康指标
             - **解释方法**: SHAP (SHapley Additive exPlanations)
             - **分析样本**: 基于测试集数据
+            - **模型优势**: 自动处理类别特征，抗过拟合能力强
+            - **训练数据**: 中国健康与养老追踪调查(CHARLS)数据
             """)
             
             # 解释说明
@@ -1901,8 +2086,8 @@ def render_instructions_page():
         col1, col2 = st.columns(2, gap="medium")
         with col1:
             st.markdown("""
-            <div style="background-color: #fff3e0; border-radius: 12px; padding: 20px; height: 100%; border-left: 5px solid #ff9800;">
-                <h3 style="margin: 0 0 15px 0; color: #e65100;">📋 医疗声明</h3>
+            <div style="background-color: #fff3e0; border-radius: 12px; padding: 20px; height: 220px; border-left: 5px solid #ff9800;">
+                <h3 style="margin: 0 0 5px 0; color: #e65100; font-size: 24px;">📋 医疗声明</h3>
                 <ul style="margin: 0; padding-left: 20px; color: #666; line-height: 1.6;">
                     <li>本系统仅为<strong>抑郁风险初步筛查工具</strong></li>
                     <li>评估结果<strong>不替代专业医疗诊断</strong></li>
@@ -1913,14 +2098,13 @@ def render_instructions_page():
             """, unsafe_allow_html=True)
         with col2:
             st.markdown("""
-            <div style="background-color: #e8f5e9; border-radius: 12px; padding: 20px; height: 100%; border-left: 5px solid #4caf50;">
-                <h3 style="margin: 0 0 15px 0; color: #2e7d32;">🛠️ 技术信息</h3>
+            <div style="background-color: #e8f5e9; border-radius: 12px; padding: 20px; height: 220px; border-left: 5px solid #4caf50;">
+                <h3 style="margin: 0 0 5px 0; color: #2e7d32; font-size: 24px;">🛠️ 技术信息</h3>
                 <ul style="margin: 0; padding-left: 20px; color: #666; line-height: 1.6;">
                     <li><strong>模型</strong>：CatBoost 分类器</li>
                     <li><strong>AUC</strong>：0.7805</li>
                     <li><strong>阈值</strong>：0.492 (Youden 指数)</li>
                     <li><strong>特征数量</strong>：13 个健康指标</li>
-                    <li><strong>更新日期</strong>：2026年</li>
                 </ul>
             </div>
             """, unsafe_allow_html=True)
@@ -1957,9 +2141,8 @@ def render_instructions_page():
         <div style="background-color: #1976d2; color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px;">
             <i class="fas fa-lightbulb" style="font-size: 20px;"></i>
         </div>
-        <div>
-            <h3 style="margin: 0 0 5px 0; color: #1976d2;">💡 快速体验</h3>
-            <p style="margin: 0; color: #666;">侧边栏点击「高风险示例」或「低风险示例」，系统将自动填充数据并开始评估。</p>
+        <div style="display: flex; align-items: center; height: 100%;">
+            <p style="margin: 0; color: #666; font-size: 18px;">侧边栏点击「高风险示例」或「低风险示例」，系统将自动填充数据并开始评估。</p>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -2332,8 +2515,10 @@ def generate_pdf_report(record) -> bytes:
             # 重建特征数据
             feature_values = input_features
             
-            # 加载模型
-            model_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'models', 'CatBoost_F2_v1_with_threshold.pkl')
+            # 从配置文件获取模型路径
+            model_path = CONFIG.get('model', {}).get('model_path', 'models/CatBoost_F2_v1_with_threshold.pkl')
+            # 使用绝对路径加载模型文件
+            model_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), model_path)
             loaded_model = joblib.load(model_path)
             model = loaded_model['model']
             
