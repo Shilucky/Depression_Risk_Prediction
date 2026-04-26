@@ -146,17 +146,17 @@ theme_primary_color = theme_config.get('primaryColor', '#1a73e8')
 
 # 设置页面配置
 st.set_page_config(
-    page_title="抑郁风险预警系统",
+    page_title=CONFIG.get('page', {}).get('title', "抑郁风险预警系统"),
     page_icon="🧠",
-    layout="wide",
-    initial_sidebar_state="expanded",
+    layout=CONFIG.get('page', {}).get('layout', "wide"),
+    initial_sidebar_state=CONFIG.get('page', {}).get('initial_sidebar_state', "expanded"),
     menu_items={
         'Get Help': 'https://github.com/yourusername/depression-risk-app',
         'Report a bug': None,
-        'About': """
-        ## 抑郁风险预警系统
+        'About': f"""
+        ## {CONFIG.get('page', {}).get('title', "抑郁风险预警系统")}
         基于CatBoost模型的社区中老年人抑郁风险筛查工具
-        版本: 1.0.0
+        版本: {CONFIG.get('version', {}).get('number', "1.0.0")}
         开发团队: 公共卫生研究团队
         """
     }
@@ -548,9 +548,14 @@ def get_risk_info(probability: float, threshold: float = RISK_THRESHOLD) -> Dict
     """根据概率获取风险信息"""
     is_risk = probability >= threshold
 
+    # 从配置中获取风险类别和颜色
+    risk_config = CONFIG.get('risk', {})
+    risk_categories = risk_config.get('risk_category', ["无风险", "有风险"])
+    risk_colors = risk_config.get('risk_colors', ["green", "red"])
+
     # 只返回二分类结果
-    risk_category = "有风险" if is_risk else "无风险"
-    color = "red" if is_risk else "green"
+    risk_category = risk_categories[1] if is_risk else risk_categories[0]
+    color = risk_colors[1] if is_risk else risk_colors[0]
 
     return {
         'is_risk': is_risk,
@@ -563,9 +568,7 @@ def get_risk_info(probability: float, threshold: float = RISK_THRESHOLD) -> Dict
 def get_personalized_advice(risk_info: Dict, shap_values: np.ndarray,
                             feature_names: List[str], feature_values: Dict) -> str:
     """生成个性化建议"""
-    probability = risk_info['probability']
     is_risk = risk_info['is_risk']
-    risk_category = risk_info['risk_category']
 
     # 获取最重要的风险因素
     top_features = []
@@ -578,8 +581,6 @@ def get_personalized_advice(risk_info: Dict, shap_values: np.ndarray,
 
     if is_risk:
         advice += f"""
-        风险评估：{risk_category} (概率: {probability:.3f})
-
         � 建议立即采取行动：
         1. 强烈建议尽快咨询专业医生或心理卫生专家
         2. 与家人或朋友沟通您的感受
@@ -589,8 +590,6 @@ def get_personalized_advice(risk_info: Dict, shap_values: np.ndarray,
         """
     else:
         advice += f"""
-        风险评估：{risk_category} (概率: {probability:.3f})
-
         👍 当前状态良好：
         1. 继续保持健康的生活方式
         2. 定期进行自我评估
@@ -928,8 +927,12 @@ def render_sidebar():
 
         st.divider()
 
+        # 获取版本信息
+        version_number = CONFIG.get('version', {}).get('number', '1.0.0')
+        version_year = CONFIG.get('version', {}).get('year', '2026')
+        
         # 系统信息 - 使用自定义HTML容器控制样式
-        st.markdown('''
+        st.markdown(f'''
         <div class="system-info">
             <h3>📊 系统信息</h3>
             <div style="display: flex; align-items: center; gap: 10px; margin: 8px 0;">
@@ -949,7 +952,7 @@ def render_sidebar():
                 <p style="margin: 0;">隐私保护：完全匿名，不存储个人信息</p>
             </div>
             <div style="margin-top: 12px; padding-top: 8px; border-top: 1px solid #e0e0e0;">
-                <p class="version">版本 1.0.0 | 2026</p>
+                <p class="version">版本 {version_number} | {version_year}</p>
             </div>
         </div>
         ''', unsafe_allow_html=True)
@@ -1193,7 +1196,7 @@ def render_input_form():
         <div style="background-color: #e3f2fd; border-radius: 10px; padding: 10px; margin-bottom: 15px; border-left: 5px solid #2196f3;">
             <div style="display: flex; align-items: center; gap: 10px; height: 24px;">
                 <span style="font-size: 20px; display: inline-block; vertical-align: middle;">🏥</span>
-                <h3 style="margin: 0; color: #1565c0; font-size: 20px; display: inline-block; vertical-align: middle;">慢性病管理（可选）</h3>
+                <h3 style="margin: 0; color: #1565c0; font-size: 20px; display: inline-block; vertical-align: middle;">慢性病管理</h3>
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -1310,13 +1313,18 @@ def render_prediction_result():
         import plotly.graph_objects as go
         
         probability = result['probability']
+        # 从配置中获取概率阈值和颜色
+        risk_config = CONFIG.get('risk', {})
+        thresholds = risk_config.get('probability_thresholds', [0.3, 0.6])
+        colors = risk_config.get('probability_colors', ['#4caf50', '#ff9800', '#f44336'])
+        
         # 根据概率确定颜色
-        if probability < 0.3:
-            color = '#4caf50'      # 绿色
-        elif probability < 0.6:
-            color = '#ff9800'      # 橙色
+        if probability < thresholds[0]:
+            color = colors[0]      # 绿色
+        elif probability < thresholds[1]:
+            color = colors[1]      # 橙色
         else:
-            color = '#f44336'      # 红色
+            color = colors[2]      # 红色
         
         # 创建圆环图（仪表盘）
         fig = go.Figure(
@@ -1343,14 +1351,14 @@ def render_prediction_result():
             plot_bgcolor='rgba(0,0,0,0)'
         )
         
-        # 使用两列布局
+        # 使用两列布局，确保高度一致
         col_left, col_right = st.columns([1, 2])
         with col_left:
             st.plotly_chart(fig, use_container_width=True)
         with col_right:
             st.markdown(f"""
-            <div style="display: flex; flex-direction: column; justify-content: center; height: 100%;">
-                <div style="margin-bottom: 15px;">
+            <div style="display: flex; flex-direction: column; justify-content: center; height: 200px;">
+                <div style="margin-bottom: 10px;">
                     <p style="margin: 0 0 5px 0; color: #666; font-size: 14px;">抑郁风险概率</p>
                     <p style="margin: 0; font-size: 28px; font-weight: bold; color: #333;">{probability:.3f}</p>
                 </div>
@@ -1471,7 +1479,7 @@ def render_prediction_result():
         <div style="background-color: #f3e5f5; border-radius: 10px; padding: 10px; margin-bottom: 15px; border-left: 5px solid #9c27b0;">
             <div style="display: flex; align-items: center; gap: 10px; height: 24px;">
                 <span style="font-size: 20px; display: inline-block; vertical-align: middle;">📤</span>
-                <h3 style="margin: 0; color: #6a1b9a; font-size: 20px; display: inline-block; vertical-align: middle;">保存和分享选项</h3>
+                <h3 style="margin: 0; color: #6a1b9a; font-size: 20px; display: inline-block; vertical-align: middle;">保存结果</h3>
             </div>
         </div>
         """, unsafe_allow_html=True)

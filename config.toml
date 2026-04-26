@@ -90,3 +90,56 @@ arthritis_asthma = ["关节炎或风湿病", "哮喘"]
 [theme]
 base = "light"
 primaryColor = "#1a73e8"
+
+# 页面配置
+[page]
+title = "抑郁风险预警系统"
+layout = "wide"
+initial_sidebar_state = "expanded"
+
+# 风险评估配置
+[risk]
+risk_category = ["无风险", "有风险"]
+risk_colors = ["green", "red"]
+probability_thresholds = [0.3, 0.6]
+probability_colors = ["#4caf50", "#ff9800", "#f44336"]
+
+# 按钮文本配置
+[buttons]
+adl_apply = "✅ 应用ADL总分"
+iadl_apply = "✅ 应用IADL总分"
+high_risk_example = "⚠️ 高风险示例"
+low_risk_example = "✅ 低风险示例"
+reset_defaults = "⟳ 重置默认值"
+start_assessment = "🚀 开始评估"
+save_result = "💾 保存结果"
+reassess = "🔄 重新评估"
+delete_record = "🗑️ 删除"
+export_pdf = "📄 PDF"
+export_csv = "导出CSV"
+export_batch_pdf = "批量导出PDF"
+select_all = "全选"
+clear_all = "清空"
+
+# 版本信息
+[version]
+number = "1.0.0"
+year = "2026"
+
+# 图表配置
+[charts]
+global_importance_title = "全局特征重要性"
+color_scale = "Viridis"
+
+# 帮助文本
+[help_text]
+adl_total = "日常生活活动能力总分"
+iadl_total = "工具性日常生活活动能力总分"
+sleep_hours = "平均每晚睡眠时长"
+feature_dependence = "选择一个特征查看其与SHAP值的关系"
+
+# 映射配置
+[mappings]
+gender = { 0 = "男", 1 = "女" }
+residence_type = { 0 = "农村", 1 = "城镇" }
+binary = { 0 = "否", 1 = "是" }
