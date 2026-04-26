@@ -136,6 +136,27 @@ def load_config():
 # 加载配置
 CONFIG = load_config()
 
+# 从Streamlit Secrets读取部署配置
+DEPLOY_MODE = st.secrets.get("DEPLOY_MODE", "local")
+
+# 密码验证函数
+def verify_admin_password(password):
+    """验证管理员密码"""
+    from utils.db_utils import verify_password
+    return verify_password(password)
+
+# 更新密码函数
+def update_admin_password(current_password, new_password):
+    """更新管理员密码"""
+    from utils.db_utils import verify_password, update_password
+    if not verify_password(current_password):
+        return False, "当前密码错误"
+    if len(new_password) < 8:
+        return False, "新密码长度至少为8位"
+    if update_password(new_password):
+        return True, "密码修改成功"
+    return False, "密码修改失败"
+
 # 在程序入口调用
 set_matplotlib_chinese_font()
 
@@ -866,10 +887,13 @@ def render_sidebar():
         # 导航 - 使用自定义按钮实现
         nav_items = [
             {"id": "assessment", "label": "🔍 风险评估", "icon": "🔍"},
-            {"id": "history", "label": "📊 历史记录", "icon": "📊"},
             {"id": "explanation", "label": "🧠 模型解释", "icon": "🧠"},
             {"id": "instructions", "label": "ℹ️ 使用说明", "icon": "ℹ️"}
         ]
+        
+        # 在本地部署模式下添加历史记录选项
+        if DEPLOY_MODE == "local":
+            nav_items.insert(1, {"id": "history", "label": "📊 历史记录", "icon": "📊"})
         
         # 检查当前页面
         if "page" not in st.session_state:
@@ -1483,28 +1507,69 @@ def render_prediction_result():
             </div>
         </div>
         """, unsafe_allow_html=True)
-    col1, col2, col3 = st.columns(3)
+    
+    # 根据部署模式调整布局
+    if DEPLOY_MODE == "local":
+        # 本地部署：显示备注、保存结果和重新评估按钮
+        col1, col2, col3 = st.columns(3)
 
-    with col1:
-        # 添加备注
-        nickname = st.text_input(
-            "添加备注（可选）",
-            placeholder="如：张阿姨_评估",
-            max_chars=20,
-            key="result_nickname"
-        )
+        with col1:
+            # 添加备注
+            nickname = st.text_input(
+                "添加备注（可选）",
+                placeholder="如：张阿姨_评估",
+                max_chars=20,
+                key="result_nickname"
+            )
 
-    with col2:
-        if st.button("💾 保存结果", use_container_width=True):
-            if save_prediction_to_db(result, nickname):
-                st.success("✅ 结果已保存！")
-            else:
-                st.error("保存失败，请重试")
+        with col2:
+            if st.button("💾 保存结果", use_container_width=True):
+                if save_prediction_to_db(result, nickname):
+                    st.success("✅ 结果已保存！")
+                else:
+                    st.error("保存失败，请重试")
 
-    with col3:
-        if st.button("🔄 重新评估", use_container_width=True, type="secondary"):
-            st.session_state.show_result = False
-            st.rerun()
+        with col3:
+            if st.button("🔄 重新评估", use_container_width=True, type="secondary"):
+                st.session_state.show_result = False
+                st.rerun()
+    else:
+        # 云部署：显示PDF下载和重新评估按钮
+        col1, col2 = st.columns(2)
+
+        with col1:
+            if st.button("📄 下载PDF报告", use_container_width=True):
+                # 生成PDF报告
+                record_dict = {
+                    'id': 'current',
+                    'timestamp': result['timestamp'],
+                    'nickname': '',
+                    'probability': result['probability'],
+                    'risk_level': '有风险' if result['is_risk'] else '无风险',
+                    'input_features': json.dumps(result['feature_values'], ensure_ascii=False),
+                    'shap_summary': None
+                }
+                with st.spinner("正在生成PDF报告..."):
+                    pdf_data = generate_pdf_report(record_dict)
+                    if pdf_data:
+                        timestamp_str = result['timestamp'].replace(':', '-').replace(' ', '_')
+                        file_name = f"depression_risk_report_{timestamp_str}.pdf"
+                        st.download_button(
+                            label="下载PDF",
+                            data=pdf_data,
+                            file_name=file_name,
+                            mime="application/pdf",
+                            key="download_pdf",
+                            help="下载PDF报告",
+                            use_container_width=True
+                        )
+                    else:
+                        st.error("PDF生成失败")
+
+        with col2:
+            if st.button("🔄 重新评估", use_container_width=True, type="secondary"):
+                st.session_state.show_result = False
+                st.rerun()
 
 
 def render_welcome_message():
@@ -1516,10 +1581,63 @@ def render_welcome_message():
 
 def render_history_page():
     """渲染历史记录页面 - 表格形式，每行带删除和PDF按钮"""
+    # 检查部署模式
+    if DEPLOY_MODE != "local":
+        st.error("历史记录功能仅在本地部署模式下可用")
+        return
+    
+    # 密码验证
+    if "history_access" not in st.session_state:
+        st.session_state.history_access = False
+    if "last_activity_time" not in st.session_state:
+        st.session_state.last_activity_time = time.time()
+    
+    # 检查是否超时（10分钟）
+    timeout = 10 * 60  # 10分钟，单位为秒
+    current_time = time.time()
+    if st.session_state.history_access and (current_time - st.session_state.last_activity_time) > timeout:
+        del st.session_state.history_access
+        st.session_state.last_activity_time = current_time
+        st.rerun()
+    
+    if not st.session_state.history_access:
+        # 修改标题为蓝色
+        st.markdown("<h1 style='color: #1a73e8;'>🔒 历史记录访问</h1>", unsafe_allow_html=True)
+        # 增大输入框和标签字体
+        st.markdown("<style>input[type='password'] { font-size: 18px; } .stTextInput label { font-size: 18px; font-weight: 500; }</style>", unsafe_allow_html=True)
+        password = st.text_input("请输入访问密码", type="password")
+        # 修改按钮为蓝色
+        if st.button("验证密码", type="primary"):
+            if verify_admin_password(password):
+                st.session_state.history_access = True
+                st.session_state.last_activity_time = time.time()
+                st.rerun()
+            else:
+                st.error("密码错误，请重试")
+        return
+    
+    # 更新活动时间
+    st.session_state.last_activity_time = time.time()
+    
     st.title("📊 评估历史记录")
 
     # 初始化数据库
     init_db()
+    
+    # 密码修改功能
+    with st.expander("🔧 修改密码"):
+        current_password = st.text_input("当前密码", type="password")
+        new_password = st.text_input("新密码", type="password")
+        confirm_password = st.text_input("确认新密码", type="password")
+        if st.button("更新密码"):
+            if new_password != confirm_password:
+                st.error("两次输入的新密码不一致")
+            else:
+                success, message = update_admin_password(current_password, new_password)
+                if success:
+                    st.success(message)
+                else:
+                    st.error(message)
 
     # 筛选选项
     col1, col2, col3 = st.columns(3)
@@ -1906,7 +2024,6 @@ def render_global_explanation_page():
             - **特征数量**: 13个健康指标
             - **解释方法**: SHAP (SHapley Additive exPlanations)
             - **分析样本**: 基于测试集数据
-            - **模型优势**: 自动处理类别特征，抗过拟合能力强
             - **训练数据**: 中国健康与养老追踪调查(CHARLS)数据
             """)
             

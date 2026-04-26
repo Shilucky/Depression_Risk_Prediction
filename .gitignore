@@ -1,0 +1,27 @@
+# Streamlit配置文件
+.streamlit/secrets.toml
+
+# Python缓存文件
+__pycache__/
+*.pyc
+
+# 数据文件
+data/
+
+# 模型文件
+models/
+
+# SHAP结果文件
+shap_results/
+
+# IDE配置文件
+.vscode/
+.idea/
+
+# 操作系统文件
+.DS_Store
+Thumbs.db
+
+# 临时文件
+*.tmp
+*.temp

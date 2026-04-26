@@ -10,6 +10,7 @@ import pandas as pd
 from datetime import datetime, timedelta
 from typing import List, Dict, Optional, Tuple
 import os
+import hashlib
 
 # 数据库文件路径（存放在 data 子目录下）
 import os
@@ -39,6 +40,61 @@ def init_db():
         conn.execute('CREATE INDEX IF NOT EXISTS idx_timestamp ON prediction_records(timestamp)')
         conn.execute('CREATE INDEX IF NOT EXISTS idx_nickname ON prediction_records(nickname)')
         conn.execute('CREATE INDEX IF NOT EXISTS idx_risk_level ON prediction_records(risk_level)')
+    
+    # 初始化密码表
+    init_password_table()
+
+
+def init_password_table():
+    """初始化密码表"""
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.execute('''
+            CREATE TABLE IF NOT EXISTS password (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                password_hash TEXT NOT NULL,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        # 检查是否有密码记录
+        count = conn.execute("SELECT COUNT(*) FROM password").fetchone()[0]
+        if count == 0:
+            # 设置默认密码为Shi1016!
+            default_password = "Shi1016!"
+            password_hash = hashlib.sha256(default_password.encode()).hexdigest()
+            conn.execute(
+                "INSERT INTO password (password_hash) VALUES (?)",
+                (password_hash,)
+            )
+
+
+def get_password():
+    """获取密码"""
+    with sqlite3.connect(DB_PATH) as conn:
+        row = conn.execute("SELECT password_hash FROM password ORDER BY id DESC LIMIT 1").fetchone()
+        if row:
+            return row[0]
+        return None
+
+
+def update_password(new_password):
+    """更新密码"""
+    password_hash = hashlib.sha256(new_password.encode()).hexdigest()
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.execute(
+            "INSERT INTO password (password_hash) VALUES (?)",
+            (password_hash,)
+        )
+    return True
+
+
+def verify_password(password):
+    """验证密码"""
+    stored_hash = get_password()
+    if not stored_hash:
+        return False
+    password_hash = hashlib.sha256(password.encode()).hexdigest()
+    return password_hash == stored_hash
 
 
 # ========== 保存记录 ==========
