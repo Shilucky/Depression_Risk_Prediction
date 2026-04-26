@@ -581,7 +581,7 @@ def get_personalized_advice(risk_info: Dict, shap_values: np.ndarray,
 
     if is_risk:
         advice += f"""
-        � 建议立即采取行动：
+        ⚠️ 建议立即采取行动：
         1. 强烈建议尽快咨询专业医生或心理卫生专家
         2. 与家人或朋友沟通您的感受
         3. 社区心理卫生服务中心可提供专业支持
