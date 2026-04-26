@@ -1603,8 +1603,21 @@ def render_history_page():
     if not st.session_state.history_access:
         # 修改标题为蓝色
         st.markdown("<h1 style='color: #1a73e8;'>🔒 历史记录访问</h1>", unsafe_allow_html=True)
+        
+        # 增加提醒文字
+        st.markdown("""
+        <div style="background-color: #e3f2fd; border-radius: 8px; padding: 15px; margin-bottom: 20px; border-left: 4px solid #1a73e8;">
+            <h4 style="margin: 0 0 10px 0; color: #1565c0; font-size: 18px;">⚠️ 安全提醒</h4>
+            <ul style="margin: 0; padding-left: 20px; color: #666; line-height: 1.5; font-size: 18px;">
+                <li>离开历史记录页面或停止操作<strong>超过10分钟</strong>，系统将自动登出</li>
+                <li>为保护隐私，使用完毕后请及时关闭系统</li>
+                <li>所有历史记录均保存在本地，不会上传到任何服务器</li>
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
+        
         # 增大输入框和标签字体
-        st.markdown("<style>input[type='password'] { font-size: 18px; } .stTextInput label { font-size: 18px; font-weight: 500; }</style>", unsafe_allow_html=True)
+        st.markdown("<style>input[type='password'] { font-size: 20px; } .stTextInput label { font-size: 20px; font-weight: 500; }</style>", unsafe_allow_html=True)
         password = st.text_input("请输入访问密码", type="password")
         # 修改按钮为蓝色
         if st.button("验证密码", type="primary"):
@@ -2244,6 +2257,37 @@ def render_instructions_page():
                 </ul>
             </div>
             """, unsafe_allow_html=True)
+
+    # 部署模式与安全说明
+    st.markdown("## 🌐 部署模式与安全说明")
+    st.markdown("""
+    <div style="background-color: #f3e5f5; border-radius: 12px; padding: 20px; margin-bottom: 30px; border-left: 5px solid #9c27b0;">
+        <div style="display: flex; align-items: center; margin-bottom: 15px;">
+            <i class="fas fa-cloud-upload-alt" style="font-size: 24px; color: #9c27b0; margin-right: 10px;"></i>
+            <h3 style="margin: 0; color: #6a1b9a;">部署模式</h3>
+        </div>
+        <p style="color: #333; line-height: 1.6;">
+            本系统提供两种部署模式，侧边栏菜单会根据部署模式自动显示可用功能：
+        </p>
+        <ul style="color: #444; line-height: 1.6;">
+            <li><strong>🏠 本地部署版</strong>：支持<strong>历史记录保存、批量导出CSV/PDF、密码保护</strong>等完整功能。所有评估记录保存在您自己的电脑上，数据不会上传到任何服务器。</li>
+            <li><strong>☁️ 云部署版</strong>：为保护隐私，<strong>不提供历史记录保存功能</strong>，但支持<strong>单次评估结果导出为PDF报告</strong>，每次评估都完全独立。</li>
+        </ul>
+    </div>
+
+    <div style="background-color: #e8f5e9; border-radius: 12px; padding: 20px; margin-bottom: 30px; border-left: 5px solid #4caf50;">
+        <div style="display: flex; align-items: center; margin-bottom: 15px;">
+            <i class="fas fa-lock" style="font-size: 24px; color: #388e3c; margin-right: 10px;"></i>
+            <h3 style="margin: 0; color: #2e7d32;">历史记录访问安全规则（仅本地部署版）</h3>
+        </div>
+        <ul style="color: #444; line-height: 1.6;">
+            <li><strong>🔑 密码验证</strong>：首次访问"📊 历史记录"页面时，需要输入管理员密码。系统初始密码已预设在配置中，您可在历史记录页面修改密码。</li>
+            <li><strong>⏰ 会话超时</strong>：为保护您的数据安全，如果离开历史记录页面或停止操作<strong>超过10分钟</strong>，系统将自动登出，再次访问需要重新输入密码。</li>
+            <li><strong>💾 数据存储位置</strong>：所有历史记录、评估数据、SHAP解释结果均保存在您的<strong>本地数据库文件</strong>中（如SQLite），系统不会通过网络传输任何个人健康信息。</li>
+            <li><strong>📤 导出功能</strong>：在历史记录页面，您可以批量导出CSV（原始数据）或PDF（详细报告），导出文件也保存在您自己的设备上。</li>
+        </ul>
+    </div>
+    """, unsafe_allow_html=True)
 
     # 常见问题
     st.markdown("## ❓ 常见问题")
