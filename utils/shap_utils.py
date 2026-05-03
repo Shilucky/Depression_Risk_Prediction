@@ -167,7 +167,7 @@ def generate_text_explanation(
         top_n: 分别展示正向和负向贡献最大的特征数
 
     Returns:
-        解释文本（Markdown 格式）
+        解释文本（HTML 格式）
     """
     if shap_values_single is None or len(shap_values_single) == 0:
         return "无法生成解释信息。"
@@ -187,30 +187,33 @@ def generate_text_explanation(
     top_positive = positive[:top_n]
     top_negative = negative[:top_n]
 
-    lines = []
-    lines.append(f"**模型预测概率**: {probability:.3f}（基准值: {base_value:.3f}）\n")
-    lines.append("### 主要风险因素（增加风险）")
+    html_parts = []
+    html_parts.append("<h4 style=\"margin-top:0;margin-bottom:8px;color:#0d47a1;\">主要风险因素（增加风险）</h4>")
     if top_positive:
+        html_parts.append("<ul style=\"margin-top:4px;margin-bottom:16px;\">")
         for feat, val in top_positive:
             cn_name = name_map.get(feat, feat)
-            lines.append(f"- **{cn_name}**: 贡献 {val:+.3f}")
+            html_parts.append(f"<li><strong>{cn_name}</strong>: 贡献 {val:+.3f}</li>")
+        html_parts.append("</ul>")
     else:
-        lines.append("- 无明显增加风险的因素")
+        html_parts.append("<p style=\"margin-top:4px;margin-bottom:16px;\">- 无明显增加风险的因素</p>")
 
-    lines.append("\n### 主要保护因素（降低风险）")
+    html_parts.append("<h4 style=\"margin-top:0;margin-bottom:8px;color:#0d47a1;\">主要保护因素（降低风险）</h4>")
     if top_negative:
+        html_parts.append("<ul style=\"margin-top:4px;margin-bottom:16px;\">")
         for feat, val in top_negative:
             cn_name = name_map.get(feat, feat)
-            lines.append(f"- **{cn_name}**: 贡献 {val:+.3f}")
+            html_parts.append(f"<li><strong>{cn_name}</strong>: 贡献 {val:+.3f}</li>")
+        html_parts.append("</ul>")
     else:
-        lines.append("- 无明显降低风险的因素")
+        html_parts.append("<p style=\"margin-top:4px;margin-bottom:16px;\">- 无明显降低风险的因素</p>")
 
     if probability >= 0.5:
-        lines.append("\n**总体评估**：当前评估结果提示存在抑郁风险，建议关注上述高风险因素，并咨询专业医生。")
+        html_parts.append("<p><strong>总体评估</strong>：当前评估结果提示存在抑郁风险，建议关注上述高风险因素，并咨询专业医生。</p>")
     else:
-        lines.append("\n**总体评估**：当前评估结果提示抑郁风险较低，请继续保持健康生活方式。")
+        html_parts.append("<p><strong>总体评估</strong>：当前评估结果提示抑郁风险较低，请继续保持健康生活方式。</p>")
 
-    return "\n".join(lines)
+    return "".join(html_parts)
 
 
 def generate_feature_importance_bar(
@@ -413,7 +416,7 @@ def create_interactive_shap_waterfall(
         yaxis_title="贡献值",
         template="plotly_white",
         height=600,
-        margin=dict(l=100, r=50, t=80, b=200),
+        margin=dict(l=100, r=50, t=80, b=30),
         hovermode="x unified",
         xaxis_tickangle=-45,
         showlegend=True

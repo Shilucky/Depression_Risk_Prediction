@@ -756,6 +756,16 @@ def render_sidebar():
              border-color: #9e9e9e !important; 
          }
         
+        /* 全选/清空按钮列容器 - 底部对齐 */
+        div[data-testid="column"]:has(button[key="pain_select_all"]),
+        div[data-testid="column"]:has(button[key="pain_clear_all"]),
+        div[data-testid="column"]:has(button[key="chronic_select_all"]),
+        div[data-testid="column"]:has(button[key="chronic_clear_all"]) {
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: flex-end !important;
+        }
+        
         /* 大字体，适合中老年用户 */
         .stNumberInput input, .stTextInput input, .stSelectbox select, .stRadio label, .stCheckbox label, .stSlider label {
             font-size: 20px !important;
@@ -819,6 +829,32 @@ def render_sidebar():
             box-shadow: 0 4px 8px rgba(26, 115, 232, 0.3) !important;
         }
         
+        /* 全选和清空按钮样式 */
+        div[data-testid="stButton"] button[key="pain_select_all"],
+        div[data-testid="stButton"] button[key="pain_clear_all"],
+        div[data-testid="stButton"] button[key="chronic_select_all"],
+        div[data-testid="stButton"] button[key="chronic_clear_all"] {
+            padding: 8px 16px !important;
+            height: 42px !important;
+            font-size: 16px !important;
+            font-weight: 500 !important;
+        }
+        
+        /* 清空按钮样式 - 深灰色 */
+        div[data-testid="stButton"] button[key="pain_clear_all"],
+        div[data-testid="stButton"] button[key="chronic_clear_all"] {
+            background-color: #757575 !important;
+            color: white !important;
+            border: 1px solid #616161 !important;
+        }
+        
+        div[data-testid="stButton"] button[key="pain_clear_all"]:hover,
+        div[data-testid="stButton"] button[key="chronic_clear_all"]:hover {
+            background-color: #616161 !important;
+            color: white !important;
+            border-color: #424242 !important;
+        }
+        
         /* 风险等级样式 */
         .risk-high {
             background-color: #f8d7da;
@@ -867,7 +903,10 @@ def render_sidebar():
 
         [data-testid="stSidebar"] .system-info .version {
             margin-top: 0.5rem;
-            color: #888;
+            color: #999;
+            font-size: 15px !important;
+            text-align: center;
+            margin-bottom: 0;
         }
 
         /* 响应式调整 */
@@ -893,7 +932,7 @@ def render_sidebar():
         
         # 在本地部署模式下添加历史记录选项
         if DEPLOY_MODE == "local":
-            nav_items.insert(1, {"id": "history", "label": "📊 历史记录", "icon": "📊"})
+            nav_items.insert(1, {"id": "history", "label": "📁 历史记录", "icon": "📁"})
         
         # 检查当前页面
         if "page" not in st.session_state:
@@ -917,7 +956,7 @@ def render_sidebar():
         # 设置页面变量
         page = st.session_state.page
 
-        st.divider()
+        st.markdown('<hr style="margin-top: -1px; margin-bottom: 5px; border: none; border-top: 1px solid #e0e0e0;">', unsafe_allow_html=True)
 
         # 示例数据 - 使用与系统信息相同的样式
         st.markdown('''
@@ -943,41 +982,14 @@ def render_sidebar():
                 st.session_state.auto_evaluate = True
                 st.rerun()
             
-            # 重置按钮
-            if st.button("⟳ 重置默认值", type="secondary", use_container_width=True):
-                reset_form()
-                st.success("表单已重置！")
-                st.rerun()
-
-        st.divider()
-
         # 获取版本信息
         version_number = CONFIG.get('version', {}).get('number', '1.0.0')
         version_year = CONFIG.get('version', {}).get('year', '2026')
         
-        # 系统信息 - 使用自定义HTML容器控制样式
         st.markdown(f'''
-        <div class="system-info">
-            <h3>📊 系统信息</h3>
-            <div style="display: flex; align-items: center; gap: 10px; margin: 8px 0;">
-                <i class="fas fa-flask" style="color: #1a73e8; font-size: 16px;"></i>
-                <p style="margin: 0;">科学评估：基于CatBoost模型</p>
-            </div>
-            <div style="display: flex; align-items: center; gap: 10px; margin: 8px 0;">
-                <i class="fas fa-bolt" style="color: #1a73e8; font-size: 16px;"></i>
-                <p style="margin: 0;">快速筛查：仅需2-3分钟</p>
-            </div>
-            <div style="display: flex; align-items: center; gap: 10px; margin: 8px 0;">
-                <i class="fas fa-chart-bar" style="color: #1a73e8; font-size: 16px;"></i>
-                <p style="margin: 0;">解释透明：提供影响因素分析</p>
-            </div>
-            <div style="display: flex; align-items: center; gap: 10px; margin: 8px 0;">
-                <i class="fas fa-shield-alt" style="color: #1a73e8; font-size: 16px;"></i>
-                <p style="margin: 0;">隐私保护：完全匿名，不存储个人信息</p>
-            </div>
-            <div style="margin-top: 12px; padding-top: 8px; border-top: 1px solid #e0e0e0;">
-                <p class="version">版本 {version_number} | {version_year}</p>
-            </div>
+        <div class="system-info" style="margin-top: -5px;">
+            <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 0;">
+            <p class="version">版本 {version_number} | {version_year}</p>
         </div>
         ''', unsafe_allow_html=True)
 
@@ -986,30 +998,118 @@ def render_sidebar():
 
 def render_assessment_page():
     """渲染风险评估页面"""
-    # 主标题
+    # 主标题 + 副标题（统一居中容器）
     st.markdown("""
-    <div style="text-align: center; margin-bottom: 10px;">
-        <h1 style="font-family: 'Microsoft YaHei'; font-size: 28px; color: #1a73e8; font-weight: bold; margin: 0;">
-            👋 欢迎使用中老年抑郁风险预警系统
-        </h1>
-    </div>
+    <style> 
+    /* 头部统一容器 */ 
+    .hero-header { 
+        max-width: 900px; 
+        margin: 0 auto 12px auto; 
+        text-align: center; 
+    } 
+
+    /* 主标题样式 */ 
+    .main-title { 
+        font-family: 'Microsoft YaHei', sans-serif; 
+        font-size: 30px; 
+        font-weight: bold; 
+        margin: 0 0 8px 0; 
+        background: linear-gradient(135deg, #1a73e8 0%, #1557b0 100%); 
+        -webkit-background-clip: text; 
+        -webkit-text-fill-color: transparent; 
+        background-clip: text; 
+        line-height: 1.3; 
+        padding: 0 16px; 
+    } 
+
+    /* 副标题胶囊组容器 */ 
+    .feature-badge-group { 
+        display: flex; 
+        flex-wrap: wrap; 
+        justify-content: center; 
+        gap: 16px; 
+        margin: 0; 
+        padding: 8px 12px; 
+    } 
+
+    /* 单个胶囊样式 */ 
+    .feature-badge { 
+        display: inline-flex; 
+        align-items: center; 
+        gap: 8px; 
+        background: rgba(26, 115, 232, 0.08); 
+        backdrop-filter: blur(2px); 
+        border-radius: 48px; 
+        padding: 8px 20px; 
+        font-family: 'Microsoft YaHei', sans-serif; 
+        font-size: 16px; 
+        font-weight: 500; 
+        color: #1a73e8; 
+        border: 1px solid rgba(26, 115, 232, 0.3); 
+        transition: all 0.25s cubic-bezier(0.2, 0.9, 0.4, 1.1); 
+        cursor: default; 
+        box-shadow: 0 1px 2px rgba(0,0,0,0.02); 
+    } 
+
+    .feature-badge:hover { 
+        transform: translateY(-3px); 
+        background: rgba(26, 115, 232, 0.15); 
+        border-color: #1a73e8; 
+        box-shadow: 0 8px 18px rgba(26, 115, 232, 0.2); 
+    } 
+
+    .feature-badge i { 
+        font-size: 1.2em; 
+        transition: transform 0.2s ease; 
+    } 
+
+    .feature-badge:hover i { 
+        transform: scale(1.1) rotate(2deg); 
+    } 
+
+    @media (max-width: 640px) { 
+        .main-title { font-size: 24px; } 
+        .feature-badge-group { gap: 10px; } 
+        .feature-badge { padding: 6px 14px; font-size: 14px; } 
+    } 
+    </style> 
+
+    <div class="hero-header"> 
+        <div class="main-title"> 
+            基于CatBoost的中老年抑郁风险预警系统 
+        </div> 
+        <div class="feature-badge-group"> 
+            <div class="feature-badge"> 
+                <i class="fas fa-flask"></i> 
+                <strong>科学评估</strong> 
+            </div> 
+            <div class="feature-badge"> 
+                <i class="fas fa-bolt"></i> 
+                <strong>快速筛查</strong> 
+            </div> 
+            <div class="feature-badge"> 
+                <i class="fas fa-chart-line"></i> 
+                <strong>解释透明</strong> 
+            </div> 
+            <div class="feature-badge"> 
+                <i class="fas fa-lock"></i> 
+                <strong>隐私保护</strong> 
+            </div> 
+        </div> 
+    </div> 
     """, unsafe_allow_html=True)
 
-    # 副标题
+    # 免责声明 - 缩小字体和图标
     st.markdown("""
-    <div style="text-align: center; margin-bottom: 20px;">
-        <p style="font-family: 'Microsoft YaHei'; font-size: 16px; color: #4285f4; margin: 0;">
-            面向社区中老年人 | 简易健康评估 | 早期风险筛查
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
-
-    # 免责声明
-    st.markdown("""
-    <div style="background-color: #E3F2FD; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-        <p style="font-family: 'Microsoft YaHei'; font-size: 16px; color: #1565C0; line-height: 1.5;">
-            <strong>免责声明：</strong>本系统仅为抑郁风险初步筛查工具，不替代专业医疗诊断。评估结果仅供参考，如有身体不适或情绪困扰，请及时前往社区卫生服务中心或心理科进一步检查。本系统不存储个人身份信息，所有数据均为匿名处理。
-        </p>
+    <div style="background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%); border-radius: 10px; margin-bottom: 6px; padding: 12px 16px; border-left: 6px solid #ff9800; box-shadow: 0 2px 12px rgba(255, 152, 0, 0.2);">
+        <div style="display: flex; align-items: flex-start; gap: 10px;">
+            <span style="font-size: 20px; line-height: 1;">⚠️</span>
+            <div style="flex: 1;">
+                <p style="font-family: 'Microsoft YaHei'; font-size: 12px; color: #5d4037; line-height: 1.6; margin: 0;">
+                    <strong style="color: #e65100;">免责声明：</strong><strong>本系统仅为抑郁风险初步筛查工具，<span style="color: #e65100;">不能替代专业医疗诊断</span>。</strong>评估结果仅供参考，如有身体不适或情绪困扰，请及时前往社区卫生服务中心或心理科进一步检查。
+                </p>
+            </div>
+        </div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -1025,18 +1125,138 @@ def render_assessment_page():
 
 def render_input_form():
     """渲染输入表单"""
-    st.markdown("### 📋 请填写以下信息")
 
-    # 基本信息分组
-    with st.container():
-        st.markdown("""
-        <div style="background-color: #f0f8ff; border-radius: 10px; padding: 10px; margin-bottom: 15px; border-left: 5px solid #1e88e5;">
-            <div style="display: flex; align-items: center; gap: 10px; height: 24px;">
-                <span style="font-size: 20px; display: inline-block; vertical-align: middle;">👤</span>
-                <h3 style="margin: 0; color: #1565c0; font-size: 20px; display: inline-block; vertical-align: middle;">基本信息</h3>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+
+    # 添加ADL和IADL速测按钮美化（全局可用）
+    st.markdown("""
+    <style>
+        /* ADL和IADL速测按钮美化 - 主题蓝色 */
+        .stPopover button {
+            background: linear-gradient(135deg, #1a73e8 0%, #1557b0 100%) !important;
+            color: white !important;
+            border: none !important;
+            border-radius: 8px !important;
+            padding: 8px 16px !important;
+            font-weight: 600 !important;
+            box-shadow: 0 2px 8px rgba(26, 115, 232, 0.3) !important;
+            transition: all 0.2s ease !important;
+            margin-top: 24px !important;
+        }
+        
+        .stPopover button:hover {
+            background: linear-gradient(135deg, #1557b0 0%, #1a73e8 100%) !important;
+            box-shadow: 0 4px 12px rgba(26, 115, 232, 0.4) !important;
+            transform: translateY(-1px) !important;
+        }
+        
+        .stPopover button:active {
+            transform: translateY(0) !important;
+            box-shadow: 0 1px 4px rgba(26, 115, 232, 0.3) !important;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
+    # 添加标签页美化样式 - 统一专业风格
+    st.markdown("""
+    <style>
+        /* 标签列表容器 - 平均分布 */
+        .stTabs [data-baseweb="tab-list"] {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            background-color: #f8fafc;
+            padding: 8px 8px 0 8px;
+            border-radius: 16px 16px 0 0;
+        }
+        
+        /* 标签按钮样式 - 统一浅色底，选中时才显示主题色 */
+        .stTabs [data-baseweb="tab-list"] button {
+            flex: 1;
+            min-width: 0;
+            border-radius: 12px 12px 0 0;
+            height: 60px;
+            gap: 8px;
+            padding: 12px 16px;
+            background-color: #f1f5f9;
+            color: #475569;
+            border: none;
+            transition: all 0.25s ease;
+        }
+        
+        /* 标签按钮内文字样式（Streamlit把文字包在p标签里） */
+        .stTabs [data-baseweb="tab-list"] button p {
+            font-size: 18px !important;
+            font-weight: 600 !important;
+        }
+        
+        /* 悬停效果 */
+        .stTabs [data-baseweb="tab-list"] button:hover {
+            background-color: #e2e8f0;
+        }
+        .stTabs [data-baseweb="tab-list"] button:hover p {
+            color: #1e40af !important;
+        }
+        
+        /* 选中标签效果 - 主题蓝色渐变 + 微上浮 */
+        .stTabs [data-baseweb="tab-list"] button[aria-selected="true"] {
+            background: linear-gradient(135deg, #1e88e5 0%, #1565c0 100%);
+            box-shadow: 0 -2px 8px rgba(30, 136, 229, 0.3);
+            transform: translateY(-2px);
+        }
+        .stTabs [data-baseweb="tab-list"] button[aria-selected="true"] p {
+            color: white !important;
+        }
+        
+        /* 标签内容区域 - 添加卡片效果 */
+        .stTabs [data-baseweb="tab-panel"] {
+            background-color: white;
+            padding: 24px 20px 12px 20px;
+            border-radius: 0 0 16px 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e2e8f0;
+            border-top: none;
+            margin-bottom: 4px;
+        }
+        
+        /* 标签页内部表单元素间距 */
+        .stTabs [data-baseweb="tab-panel"] .stNumberInput,
+        .stTabs [data-baseweb="tab-panel"] .stSelectbox,
+        .stTabs [data-baseweb="tab-panel"] .stRadio,
+        .stTabs [data-baseweb="tab-panel"] .stSlider {
+            margin-bottom: 20px;
+        }
+        
+        /* 标签页内部表单标签字体 */
+        .stTabs [data-baseweb="tab-panel"] label p {
+            font-size: 17px !important;
+            font-weight: 500 !important;
+        }
+        
+        /* 标签页内部单选按钮和复选框文字 */
+        .stTabs [data-baseweb="tab-panel"] .stRadio label p,
+        .stTabs [data-baseweb="tab-panel"] .stCheckbox label p {
+            font-size: 16px !important;
+        }
+        
+        /* 标签页内部输入框内文字 */
+        .stTabs [data-baseweb="tab-panel"] input,
+        .stTabs [data-baseweb="tab-panel"] select,
+        .stTabs [data-baseweb="tab-panel"] [data-baseweb="select"] span {
+            font-size: 16px !important;
+        }
+        
+        /* 标签页内部caption文字 */
+        .stTabs [data-baseweb="tab-panel"] .stCaption {
+            font-size: 15px !important;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    # 标签页布局
+    tab1, tab2, tab3, tab4, tab5 = st.tabs(["👤 基本信息", "💪 健康状况", "🏃 功能状态", "🌙 生活方式", "🏥 慢性病管理"])
+
+    # 基本信息
+    with tab1:
         col1, col2 = st.columns(2)
         with col1:
             st.session_state.form_data['age'] = st.number_input(
@@ -1070,16 +1290,8 @@ def render_input_form():
                 index=0 if st.session_state.form_data.get('residence_type') == '城镇' else 1
             )
 
-    # 健康状况分组
-    with st.container():
-        st.markdown("""
-        <div style="background-color: #f0f8ff; border-radius: 10px; padding: 10px; margin-bottom: 15px; border-left: 5px solid #1e88e5;">
-            <div style="display: flex; align-items: center; gap: 10px; height: 24px;">
-                <span style="font-size: 20px; display: inline-block; vertical-align: middle;">💪</span>
-                <h3 style="margin: 0; color: #1565c0; font-size: 20px; display: inline-block; vertical-align: middle;">健康状况</h3>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+    # 健康状况
+    with tab2:
         col1, col2 = st.columns(2)
         with col1:
             st.session_state.form_data['self_rated_health'] = st.selectbox(
@@ -1099,40 +1311,8 @@ def render_input_form():
                 )
             )
 
-    # 功能状态分组
-    with st.container():
-        st.markdown("""
-        <div style="background-color: #f0f8ff; border-radius: 10px; padding: 10px; margin-bottom: 15px; border-left: 5px solid #1e88e5;">
-            <div style="display: flex; align-items: center; gap: 10px; height: 24px;">
-                <span style="font-size: 20px; display: inline-block; vertical-align: middle;">🏃</span>
-                <h3 style="margin: 0; color: #1565c0; font-size: 20px; display: inline-block; vertical-align: middle;">功能状态</h3>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        # 添加CSS使两列内容底部对齐
-        st.markdown("""
-        <style>
-        /* ADL和IADL行的列容器 */
-        div[data-testid="column"] > div {
-            display: flex !important;
-            flex-direction: column !important;
-            justify-content: flex-end !important;
-            height: 100% !important;
-        }
-        
-        /* 确保popover按钮与输入框底部对齐 */
-        .stPopover {
-            margin-top: auto !important;
-        }
-        
-        /* number_input和popover在同一行时底部对齐 */
-        div[data-testid="stHorizontalBlock"] {
-            align-items: flex-end !important;
-        }
-        </style>
-        """, unsafe_allow_html=True)
-        
+    # 功能状态
+    with tab3:
         col1, col2 = st.columns(2)
         with col1:
             col_adl, col_button = st.columns([3, 1])
@@ -1160,16 +1340,9 @@ def render_input_form():
             with col_button:
                 render_iadl_popover()
 
-    # 生活方式分组
-    with st.container():
-        st.markdown("""
-        <div style="background-color: #f0f8ff; border-radius: 10px; padding: 10px; margin-bottom: 15px; border-left: 5px solid #1e88e5;">
-            <div style="display: flex; align-items: center; gap: 10px; height: 24px;">
-                <span style="font-size: 20px; display: inline-block; vertical-align: middle;">🌙</span>
-                <h3 style="margin: 0; color: #1565c0; font-size: 20px; display: inline-block; vertical-align: middle;">生活方式</h3>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+    
+    # 生活方式
+    with tab4:
         st.session_state.form_data['sleep_hours_night'] = st.slider(
             "夜间睡眠时长（小时）",
             min_value=0.0,
@@ -1179,11 +1352,11 @@ def render_input_form():
             help="平均每晚睡眠时长"
         )
 
-        st.markdown("疼痛部位（可多选）")
+        st.markdown('<p style="font-size: 17px; font-weight: 500; margin-bottom: 8px;">疼痛部位（可多选）</p>', unsafe_allow_html=True)
         # 全选/清空按钮
         col_select, col_clear = st.columns(2)
         with col_select:
-            if st.button("全选", key="pain_select_all"):
+            if st.button("全选", key="pain_select_all", type="primary"):
                 # 1. 更新业务数据
                 st.session_state.form_data['pain_sites'] = PAIN_SITES.copy()
                 # 2. 更新每个复选框的 Streamlit 内部状态
@@ -1214,22 +1387,14 @@ def render_input_form():
                         st.session_state.form_data['pain_sites'].remove(site)
         st.caption(f"已选择 {len(st.session_state.form_data.get('pain_sites', []))} 个部位")
 
-    # 慢性病管理分组
-    with st.container():
-        st.markdown("""
-        <div style="background-color: #e3f2fd; border-radius: 10px; padding: 10px; margin-bottom: 15px; border-left: 5px solid #2196f3;">
-            <div style="display: flex; align-items: center; gap: 10px; height: 24px;">
-                <span style="font-size: 20px; display: inline-block; vertical-align: middle;">🏥</span>
-                <h3 style="margin: 0; color: #1565c0; font-size: 20px; display: inline-block; vertical-align: middle;">慢性病管理</h3>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+    # 慢性病管理
+    with tab5:
         # 慢性病选择
-        st.markdown("患有以下慢性病（可多选）")
+        st.markdown('<p style="font-size: 17px; font-weight: 500; margin-bottom: 8px;">患有以下慢性病（可多选）</p>', unsafe_allow_html=True)
         # 全选/清空按钮
         col_select, col_clear = st.columns(2)
         with col_select:
-            if st.button("全选", key="chronic_select_all"):
+            if st.button("全选", key="chronic_select_all", type="primary"):
                 st.session_state.form_data['chronic_diseases'] = CHRONIC_DISEASES.copy()
                 for disease in CHRONIC_DISEASES:
                     st.session_state[f"chronic_{disease}"] = True
@@ -1278,16 +1443,38 @@ def render_input_form():
         if arthritis_asthma:
             st.success("🔍 检测到：关节炎-哮喘共病")
 
+    # 操作按钮区域（在标签页外面，公共区域，居中）
+    _, center_col, _ = st.columns([2, 4, 2])
+    with center_col:
+        col1, col2 = st.columns([1, 1], gap="medium")
+        with col1:
+            submit = st.button(
+                "🚀 开始评估",
+                type="primary",
+                use_container_width=True
+            )
+        with col2:
+            if st.button("⟳ 重置默认值", type="secondary", use_container_width=True):
+                st.session_state.show_reset_dialog = True
 
+    # 重置确认弹窗
+    if st.session_state.get('show_reset_dialog', False):
 
-    # 表单提交按钮
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        submit = st.button(
-            "🚀 开始评估",
-            type="primary",
-            use_container_width=True
-        )
+        @st.dialog("⚠️ 确认重置表单")
+        def reset_confirm_dialog():
+            st.warning("确定要重置所有已填写的内容吗？此操作不可撤销，所有字段将恢复为默认值。")
+            c1, c2 = st.columns(2, gap="small")
+            with c1:
+                if st.button("✅ 确认重置", type="primary", use_container_width=True):
+                    reset_form()
+                    st.session_state.show_reset_dialog = False
+                    st.rerun()
+            with c2:
+                if st.button("❌ 取消", use_container_width=True):
+                    st.session_state.show_reset_dialog = False
+                    st.rerun()
+
+        reset_confirm_dialog()
 
     if submit:
         # 验证输入
@@ -1395,13 +1582,13 @@ def render_prediction_result():
             </div>
             """, unsafe_allow_html=True)
 
-    # 主要影响因素分析卡片
+    # 影响因素分析与解释卡片
     with st.container():
         st.markdown("""
         <div style="background-color: #e3f2fd; border-radius: 10px; padding: 10px; margin-bottom: 15px; border-left: 5px solid #2196f3;">
             <div style="display: flex; align-items: center; gap: 10px; height: 24px;">
                 <span style="font-size: 20px; display: inline-block; vertical-align: middle;">📈</span>
-                <h3 style="margin: 0; color: #1565c0; font-size: 20px; display: inline-block; vertical-align: middle;">主要影响因素分析</h3>
+                <h3 style="margin: 0; color: #1565c0; font-size: 20px; display: inline-block; vertical-align: middle;">影响因素分析与解释</h3>
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -1441,6 +1628,12 @@ def render_prediction_result():
                     max_display=13
                 )
                 
+                # 减小图表底部间距
+                st.markdown("""
+                <style>
+                .stPlotlyChart { margin-bottom: -10px !important; }
+                </style>
+                """, unsafe_allow_html=True)
                 # 显示图表
                 st.plotly_chart(fig, use_container_width=True)
             except Exception as e:
@@ -1466,16 +1659,13 @@ def render_prediction_result():
                 result['probability']
             )
             if explanation:
-                with st.container():
-                    st.markdown("""
-                    <div style="background-color: #f5f5f5; border-radius: 10px; padding: 10px; margin-top: 15px; margin-bottom: 15px; border-left: 5px solid #9e9e9e;">
-                        <div style="display: flex; align-items: center; gap: 10px; height: 24px;">
-                            <span style="font-size: 20px; display: inline-block; vertical-align: middle;">📋</span>
-                            <h3 style="margin: 0; color: #333; font-size: 20px; display: inline-block; vertical-align: middle;">详细解释</h3>
-                        </div>
+                st.markdown(f"""
+                <div style="background-color: rgba(26, 115, 232, 0.06); border-radius: 10px; padding: 16px 20px; margin-top: -8px; margin-bottom: 24px; border-left: 4px solid #2196f3;">
+                    <div style="font-family: 'Microsoft YaHei', sans-serif; font-size: 15px; color: #1a237e; line-height: 1.8;">
+                        {explanation}
                     </div>
-                    """, unsafe_allow_html=True)
-                    st.write(explanation)
+                </div>
+                """, unsafe_allow_html=True)
 
     # 个性化建议卡片
     with st.container():
@@ -1494,10 +1684,17 @@ def render_prediction_result():
             result.get('feature_names', []),
             result.get('feature_values', {})
         )
-        st.markdown(advice)
+        st.markdown(f"""
+        <div style="background-color: white; border: 1px solid #e8f5e9; border-radius: 10px; padding: 16px 20px; margin-top: 2px; border-left: 4px solid #4caf50; box-shadow: 0 2px 8px rgba(76, 175, 80, 0.15);">
+            <div style="font-family: 'Microsoft YaHei', sans-serif; font-size: 15px; color: #1b5e20; line-height: 1.8;">
+                {advice}
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
 
     # 保存和分享选项
-    st.divider()
     with st.container():
         st.markdown("""
         <div style="background-color: #f3e5f5; border-radius: 10px; padding: 10px; margin-bottom: 15px; border-left: 5px solid #9c27b0;">
@@ -1510,11 +1707,10 @@ def render_prediction_result():
     
     # 根据部署模式调整布局
     if DEPLOY_MODE == "local":
-        # 本地部署：显示备注、保存结果和重新评估按钮
-        col1, col2, col3 = st.columns(3)
+        # 本地部署：显示备注和保存结果按钮
+        col1, col2 = st.columns(2, vertical_alignment="bottom")
 
         with col1:
-            # 添加备注
             nickname = st.text_input(
                 "添加备注（可选）",
                 placeholder="如：张阿姨_评估",
@@ -1528,48 +1724,34 @@ def render_prediction_result():
                     st.success("✅ 结果已保存！")
                 else:
                     st.error("保存失败，请重试")
-
-        with col3:
-            if st.button("🔄 重新评估", use_container_width=True, type="secondary"):
-                st.session_state.show_result = False
-                st.rerun()
     else:
-        # 云部署：显示PDF下载和重新评估按钮
-        col1, col2 = st.columns(2)
-
-        with col1:
-            if st.button("📄 下载PDF报告", use_container_width=True):
-                # 生成PDF报告
-                record_dict = {
-                    'id': 'current',
-                    'timestamp': result['timestamp'],
-                    'nickname': '',
-                    'probability': result['probability'],
-                    'risk_level': '有风险' if result['is_risk'] else '无风险',
-                    'input_features': json.dumps(result['feature_values'], ensure_ascii=False),
-                    'shap_summary': None
-                }
-                with st.spinner("正在生成PDF报告..."):
-                    pdf_data = generate_pdf_report(record_dict)
-                    if pdf_data:
-                        timestamp_str = result['timestamp'].replace(':', '-').replace(' ', '_')
-                        file_name = f"depression_risk_report_{timestamp_str}.pdf"
-                        st.download_button(
-                            label="下载PDF",
-                            data=pdf_data,
-                            file_name=file_name,
-                            mime="application/pdf",
-                            key="download_pdf",
-                            help="下载PDF报告",
-                            use_container_width=True
-                        )
-                    else:
-                        st.error("PDF生成失败")
-
-        with col2:
-            if st.button("🔄 重新评估", use_container_width=True, type="secondary"):
-                st.session_state.show_result = False
-                st.rerun()
+        # 云部署：显示PDF下载按钮
+        if st.button("📄 下载PDF报告", use_container_width=True):
+            record_dict = {
+                'id': 'current',
+                'timestamp': result['timestamp'],
+                'nickname': '',
+                'probability': result['probability'],
+                'risk_level': '有风险' if result['is_risk'] else '无风险',
+                'input_features': json.dumps(result['feature_values'], ensure_ascii=False),
+                'shap_summary': None
+            }
+            with st.spinner("正在生成PDF报告..."):
+                pdf_data = generate_pdf_report(record_dict)
+                if pdf_data:
+                    timestamp_str = result['timestamp'].replace(':', '-').replace(' ', '_')
+                    file_name = f"depression_risk_report_{timestamp_str}.pdf"
+                    st.download_button(
+                        label="下载PDF",
+                        data=pdf_data,
+                        file_name=file_name,
+                        mime="application/pdf",
+                        key="download_pdf",
+                        help="下载PDF报告",
+                        use_container_width=True
+                    )
+                else:
+                    st.error("PDF生成失败")
 
 
 def render_welcome_message():
@@ -1632,27 +1814,39 @@ def render_history_page():
     # 更新活动时间
     st.session_state.last_activity_time = time.time()
     
-    st.title("📊 评估历史记录")
+    st.markdown("""
+    <div style="background: linear-gradient(135deg, #1e88e5 0%, #64b5f6 100%); padding: 25px; border-radius: 16px; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(30, 136, 229, 0.2);">
+        <div style="display: flex; align-items: center; margin-bottom: 15px;">
+            <div style="background-color: rgba(255, 255, 255, 0.2); border-radius: 50%; padding: 12px; margin-right: 15px;">
+                <i class="fas fa-history" style="font-size: 24px; color: white;"></i>
+            </div>
+            <h2 style="color: white; margin: 0; font-size: 24px;">历史记录</h2>
+        </div>
+        <p style="color: white; margin: 0; line-height: 1.7; font-size: 16px;">
+            查看所有评估记录，支持筛选、搜索和批量操作。您可以导出数据或生成PDF报告。
+        </p>
+        <div style="margin-top: 15px; display: flex; gap: 10px;">
+            <span style="background-color: rgba(255, 255, 255, 0.2); color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px;">数据管理</span>
+            <span style="background-color: rgba(255, 255, 255, 0.2); color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px;">批量导出</span>
+            <span style="background-color: rgba(255, 255, 255, 0.2); color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px;">统计分析</span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
     # 初始化数据库
     init_db()
-    
-    # 密码修改功能
-    with st.expander("🔧 修改密码"):
-        current_password = st.text_input("当前密码", type="password")
-        new_password = st.text_input("新密码", type="password")
-        confirm_password = st.text_input("确认新密码", type="password")
-        if st.button("更新密码"):
-            if new_password != confirm_password:
-                st.error("两次输入的新密码不一致")
-            else:
-                success, message = update_admin_password(current_password, new_password)
-                if success:
-                    st.success(message)
-                else:
-                    st.error(message)
 
     # 筛选选项
+    st.markdown("""
+        <style>
+        /* 筛选栏标签样式 */
+        div[data-testid="stSelectbox"] label p,
+        div[data-testid="stTextInput"] label p {
+            font-size: 18px !important;
+            font-weight: 600 !important;
+        }
+        </style>
+    """, unsafe_allow_html=True)
     col1, col2, col3 = st.columns(3)
     with col1:
         time_filter = st.selectbox("时间范围", ["全部", "近7天", "近30天", "近3个月"])
@@ -1661,24 +1855,19 @@ def render_history_page():
     with col3:
         nickname_search = st.text_input("搜索备注", placeholder="输入备注关键词...")
 
-    # 分页设置
-    col4, col5 = st.columns([1, 1])
-    with col4:
-        page_size = st.selectbox("每页显示", [10, 20, 50], index=1)
+    # 初始化分页状态
+    if "page_size" not in st.session_state:
+        st.session_state.page_size = 20
+    if "current_page" not in st.session_state:
+        st.session_state.current_page = 1
+
+    page_size = st.session_state.page_size
+    page = st.session_state.current_page
     
     # 获取历史记录和总记录数（单次查询）
-    offset = 0
-    page = 1
+    offset = (page - 1) * page_size
     records_df, total_count = get_history(time_filter, risk_filter, nickname_search, limit=page_size, offset=offset)
-    
-    with col5:
-        total_pages = (total_count + page_size - 1) // page_size
-        page = st.number_input("页码", min_value=1, max_value=total_pages if total_pages > 0 else 1, value=1)
-        # 重新计算偏移量
-        offset = (page - 1) * page_size
-        # 如果页码变化，重新获取数据
-        if offset > 0:
-            records_df, total_count = get_history(time_filter, risk_filter, nickname_search, limit=page_size, offset=offset)
+    total_pages = (total_count + page_size - 1) // page_size
 
     if records_df.empty:
         st.info("暂无历史记录")
@@ -1686,9 +1875,6 @@ def render_history_page():
             st.session_state.page = "🔍 风险评估"
             st.rerun()
         return
-
-    st.markdown(f"### 共找到 {total_count} 条记录，显示第 {offset + 1}-{min(offset + page_size, total_count)} 条")
-    st.markdown(f"第 {page} 页，共 {total_pages} 页")
 
     # 存储选中的记录ID
     if "selected_ids" not in st.session_state:
@@ -1698,7 +1884,7 @@ def render_history_page():
     header_cols = st.columns([0.5, 1, 2.5, 1.5, 1.5, 1.5, 1.5])
     # 全选复选框
     all_selected = len(st.session_state.selected_ids) == len(records_df)
-    select_all = header_cols[0].checkbox("全选", value=all_selected, key="select_all")
+    select_all = header_cols[0].checkbox("", value=all_selected, key="select_all")
     
     # 处理全选/取消全选 - 直接设置每个单选框的 session_state
     if select_all and not all_selected:
@@ -1714,23 +1900,24 @@ def render_history_page():
         st.session_state.selected_ids = []
         st.rerun()
     
-    header_cols[1].write("ID")
+    header_cols[1].write("序号")
     header_cols[2].write("时间")
     header_cols[3].write("备注")
     header_cols[4].write("风险概率")
     header_cols[5].write("风险类别")
     header_cols[6].write("操作")
-    st.divider()
+    st.markdown("<div style='margin-top: 4px; border-bottom: 1px solid #e5e7eb;'></div>", unsafe_allow_html=True)
 
     # 遍历显示每条记录
     for idx, row in records_df.iterrows():
         record_id = row['id']
+        display_number = idx + 1 + offset  # 计算显示序号（包括分页偏移）
 
         cols = st.columns([0.5, 1, 2.5, 1.5, 1.5, 1.5, 1.5])
         # 复选框 - 只传 key，让 Streamlit 自动从 session_state 中读取状态
         checked = cols[0].checkbox("", key=f"select_{record_id}")
 
-        cols[1].write(record_id)
+        cols[1].write(display_number)
         cols[2].write(row['timestamp'])
         cols[3].write(row['nickname'] if row['nickname'] else "无")
         cols[4].write(f"{row['probability']:.3f}")
@@ -1796,8 +1983,22 @@ def render_history_page():
             new_selected.append(row['id'])
     st.session_state.selected_ids = new_selected
 
+    # 分页控件（放在表格下方）
+    st.markdown(f"### 共 {total_count} 条记录，第 {page} / {total_pages} 页")
+    col_page_size, col_page_num = st.columns([1, 1])
+    with col_page_size:
+        new_page_size = st.selectbox("每页显示", [10, 20, 50], index=[10, 20, 50].index(page_size), key="page_size_select")
+        if new_page_size != page_size:
+            st.session_state.page_size = new_page_size
+            st.session_state.current_page = 1
+            st.rerun()
+    with col_page_num:
+        new_page = st.number_input("页码", min_value=1, max_value=total_pages if total_pages > 0 else 1, value=page, key="page_num_input")
+        if new_page != page:
+            st.session_state.current_page = new_page
+            st.rerun()
+
     # 批量操作区域（已删除清除选择按钮）
-    st.divider()
     selected_ids = st.session_state.selected_ids
     selected_count = len(selected_ids)
     if selected_count > 0:
@@ -1846,15 +2047,101 @@ def render_history_page():
         st.info("未选择任何记录，请勾选记录后批量操作")
 
     # 统计信息
-    st.divider()
+    st.markdown("## 📊 数据统计概览")
+    
     stats = get_statistics()
+    risk_rate = stats['risk_rate']
+    
+    # 创建三个统计卡片
     col1, col2, col3 = st.columns(3)
+    
     with col1:
-        st.metric("总记录数", stats['total'])
+        st.markdown(f"""
+        <div style="background: linear-gradient(135deg, #00c6fb 0%, #005bea 100%); 
+                    border-radius: 14px; padding: 18px; 
+                    box-shadow: 0 4px 16px rgba(0, 91, 234, 0.25);
+                    border: 1px solid rgba(255, 255, 255, 0.3);
+                    position: relative; overflow: hidden;">
+            <div style="position: absolute; top: -15px; right: -15px; width: 70px; height: 70px; 
+                        background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%); 
+                        border-radius: 50%;"></div>
+            <div style="display: flex; align-items: center;">
+                <div style="background: linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.1) 100%); 
+                            border-radius: 12px; padding: 10px; margin-right: 12px;
+                            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);">
+                    <span style="font-size: 24px;">📋</span>
+                </div>
+                <div>
+                    <p style="margin: 0; color: rgba(255, 255, 255, 0.9); font-size: 13px; font-weight: 500;">总记录数</p>
+                    <h2 style="margin: 3px 0 0 0; color: white; font-size: 28px; font-weight: 800; text-shadow: 0 1px 3px rgba(0,0,0,0.1);">{stats['total']}</h2>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+    
     with col2:
-        st.metric("有风险记录", stats['risk_count'])
+        st.markdown(f"""
+        <div style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%); 
+                    border-radius: 14px; padding: 18px; 
+                    box-shadow: 0 4px 16px rgba(238, 90, 36, 0.25);
+                    border: 1px solid rgba(255, 255, 255, 0.3);
+                    position: relative; overflow: hidden;">
+            <div style="position: absolute; top: -15px; right: -15px; width: 70px; height: 70px; 
+                        background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%); 
+                        border-radius: 50%;"></div>
+            <div style="display: flex; align-items: center;">
+                <div style="background: linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.1) 100%); 
+                            border-radius: 12px; padding: 10px; margin-right: 12px;
+                            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);">
+                    <span style="font-size: 24px;">⚠️</span>
+                </div>
+                <div>
+                    <p style="margin: 0; color: rgba(255, 255, 255, 0.9); font-size: 13px; font-weight: 500;">有风险记录</p>
+                    <h2 style="margin: 3px 0 0 0; color: white; font-size: 28px; font-weight: 800; text-shadow: 0 1px 3px rgba(0,0,0,0.1);">{stats['risk_count']}</h2>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+    
     with col3:
-        st.metric("平均风险概率", f"{stats['avg_probability']:.3f}")
+        st.markdown(f"""
+        <div style="background: linear-gradient(135deg, #a855f7 0%, #6366f1 100%); 
+                    border-radius: 14px; padding: 18px; 
+                    box-shadow: 0 4px 16px rgba(99, 102, 241, 0.25);
+                    border: 1px solid rgba(255, 255, 255, 0.3);
+                    position: relative; overflow: hidden;">
+            <div style="position: absolute; top: -15px; right: -15px; width: 70px; height: 70px; 
+                        background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%); 
+                        border-radius: 50%;"></div>
+            <div style="display: flex; align-items: center;">
+                <div style="background: linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.1) 100%); 
+                            border-radius: 12px; padding: 10px; margin-right: 12px;
+                            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);">
+                    <span style="font-size: 24px;">📈</span>
+                </div>
+                <div>
+                    <p style="margin: 0; color: rgba(255, 255, 255, 0.9); font-size: 13px; font-weight: 500;">平均风险概率</p>
+                    <h2 style="margin: 3px 0 0 0; color: white; font-size: 28px; font-weight: 800; text-shadow: 0 1px 3px rgba(0,0,0,0.1);">{stats['avg_probability']:.3f}</h2>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    # 密码修改功能（移到底部）
+    st.divider()
+    with st.expander("🔧 修改密码"):
+        current_password = st.text_input("当前密码", type="password")
+        new_password = st.text_input("新密码", type="password")
+        confirm_password = st.text_input("确认新密码", type="password")
+        if st.button("更新密码"):
+            if new_password != confirm_password:
+                st.error("两次输入的新密码不一致")
+            else:
+                success, message = update_admin_password(current_password, new_password)
+                if success:
+                    st.success(message)
+                else:
+                    st.error(message)
 
 
 @st.cache_data
@@ -1933,15 +2220,25 @@ def load_shap_data():
 
 def render_global_explanation_page():
     """渲染全局SHAP解释页面"""
-    st.title("模型全局解释")
     
-    # 页面说明
+    # 模型解释（与系统简介卡片相同的样式）
     st.markdown("""
-    <div style="background-color: #e3f2fd; border-radius: 10px; padding: 15px; margin-bottom: 20px;">
-        <h4 style="margin: 0 0 10px 0; color: #1565c0;">关于模型解释</h4>
-        <p style="margin: 0; color: #333; line-height: 1.5;">
-            本页面展示了模型的全局解释，帮助您理解哪些因素对抑郁风险预测影响最大。
+    <div style="background: linear-gradient(135deg, #1e88e5 0%, #64b5f6 100%); padding: 25px; border-radius: 16px; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(30, 136, 229, 0.2);">
+        <div style="display: flex; align-items: center; margin-bottom: 15px;">
+            <div style="background-color: rgba(255, 255, 255, 0.2); border-radius: 50%; padding: 12px; margin-right: 15px;">
+                <i class="fas fa-chart-bar" style="font-size: 24px; color: white;"></i>
+            </div>
+            <h2 style="color: white; margin: 0; font-size: 24px;">模型全局解释</h2>
+        </div>
+        <p style="color: white; margin: 0; line-height: 1.7; font-size: 16px;">
+            深入探索抑郁风险预测模型的工作原理，通过 <strong>SHAP 值可视化分析</strong>，
+            帮助您直观理解哪些因素对预测结果影响最大。
         </p>
+        <div style="margin-top: 15px; display: flex; gap: 10px;">
+            <span style="background-color: rgba(255, 255, 255, 0.2); color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px;">特征重要性</span>
+            <span style="background-color: rgba(255, 255, 255, 0.2); color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px;">SHAP可视化</span>
+            <span style="background-color: rgba(255, 255, 255, 0.2); color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px;">特征依赖</span>
+        </div>
     </div>
     """, unsafe_allow_html=True)
     
@@ -1964,91 +2261,302 @@ def render_global_explanation_page():
                 st.info("请先运行 05shap_analysis.py 生成分析结果")
                 return
             
-            # 显示特征重要性
-            if data['shap_importance'] is not None:
-                st.markdown("## 🌍 全局特征重要性")
+            # 自定义CSS美化标签页
+            st.markdown("""
+            <style>
+                /* 标签页容器 */
+                .stTabs [data-baseweb="tab-list"] {
+                    gap: 8px;
+                    display: flex;
+                    justify-content: space-between;
+                }
                 
-                # 显示特征重要性表格
-                st.dataframe(data['shap_importance'][['feature_cn', 'shap_importance']].rename(columns={'feature_cn': '特征名称', 'shap_importance': 'SHAP重要性'}), use_container_width=True)
+                /* 让标签平均占据空间 */
+                .stTabs [data-baseweb="tab-list"] > div {
+                    flex: 1;
+                    display: flex;
+                }
                 
-                # 使用Plotly创建交互式条形图
-                fig = px.bar(
-                    data['shap_importance'],
-                    y='feature_cn',
-                    x='shap_importance',
-                    orientation='h',
-                    title='全局特征重要性',
-                    labels={'feature_cn': '特征名称', 'shap_importance': '平均 |SHAP 值|'},
-                    color='shap_importance',
-                    color_continuous_scale='Viridis'
-                )
-                fig.update_layout(
-                    height=600,
-                    yaxis={'categoryorder': 'total ascending'},
-                    margin=dict(l=100, r=50, t=80, b=50)
-                )
-                st.plotly_chart(fig, use_container_width=True)
-            else:
-                st.warning("特征重要性文件不存在")
+                .stTabs [data-baseweb="tab-list"] button {
+                    flex: 1;
+                    justify-content: center;
+                }
+                
+                /* 标签样式 */
+                .stTabs [data-baseweb="tab"] {
+                    height: 60px;
+                    white-space: pre-wrap;
+                    background-color: #f0f2f6;
+                    border-radius: 10px 10px 0 0;
+                    gap: 4px;
+                    padding: 10px 20px;
+                }
+                
+                /* 标签按钮内文字样式 */
+                .stTabs [data-baseweb="tab-list"] button p {
+                    font-size: 20px !important;
+                    font-weight: 600 !important;
+                }
+                
+                /* 第一个标签 - 蓝色渐变 */
+                .stTabs [data-baseweb="tab-list"] button:nth-child(1) {
+                    background: linear-gradient(135deg, #1e88e5 0%, #64b5f6 100%);
+                }
+                .stTabs [data-baseweb="tab-list"] button:nth-child(1) p {
+                    color: white !important;
+                }
+                
+                /* 第二个标签 - 紫色渐变 */
+                .stTabs [data-baseweb="tab-list"] button:nth-child(2) {
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                }
+                .stTabs [data-baseweb="tab-list"] button:nth-child(2) p {
+                    color: white !important;
+                }
+                
+                /* 第三个标签 - 青色渐变 */
+                .stTabs [data-baseweb="tab-list"] button:nth-child(3) {
+                    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+                }
+                .stTabs [data-baseweb="tab-list"] button:nth-child(3) p {
+                    color: white !important;
+                }
+                
+                /* 标签悬停效果 */
+                .stTabs [data-baseweb="tab-list"] button:hover {
+                    opacity: 0.9;
+                }
+                
+                /* 选中标签效果 */
+                .stTabs [data-baseweb="tab-list"] button[aria-selected="true"] {
+                    transform: scale(1.02);
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                }
+                
+                /* 选择框样式 */
+                div[data-testid="stSelectbox"] {
+                    margin-bottom: 20px;
+                }
+                
+                /* 选择框标签样式 */
+                div[data-testid="stSelectbox"] label p {
+                    font-size: 16px;
+                    font-weight: 600;
+                    color: #1e88e5;
+                    margin-bottom: 8px;
+                }
+                
+                /* 选择框输入区域样式 */
+                div[data-testid="stSelectbox"] div[data-baseweb="select"] {
+                    border-radius: 12px;
+                    border: 2px solid #e3f2fd;
+                    box-shadow: 0 2px 8px rgba(30, 136, 229, 0.1);
+                    transition: all 0.3s ease;
+                }
+                
+                /* 选择框输入区域悬停效果 */
+                div[data-testid="stSelectbox"] div[data-baseweb="select"]:hover {
+                    border-color: #1e88e5;
+                    box-shadow: 0 4px 12px rgba(30, 136, 229, 0.2);
+                }
+                
+                /* 选择框焦点效果 */
+                div[data-testid="stSelectbox"] div[data-baseweb="select"]:focus-within {
+                    border-color: #1e88e5;
+                    box-shadow: 0 0 0 3px rgba(30, 136, 229, 0.1);
+                }
+                
+                /* 选择框文字样式 */
+                div[data-testid="stSelectbox"] div[data-baseweb="select"] span {
+                    font-size: 15px;
+                    color: #2d3748;
+                }
+                
+                /* 下拉菜单样式 */
+                div[data-testid="stSelectbox"] ul {
+                    border-radius: 10px;
+                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+                    border: none;
+                }
+                
+                /* 下拉菜单项样式 */
+                div[data-testid="stSelectbox"] ul li {
+                    padding: 10px 16px;
+                    font-size: 14px;
+                    transition: background-color 0.2s ease;
+                }
+                
+                /* 下拉菜单项悬停效果 */
+                div[data-testid="stSelectbox"] ul li:hover {
+                    background: linear-gradient(135deg, #1e88e5 0%, #64b5f6 100%);
+                    color: white;
+                }
+                
+                /* 选中的下拉菜单项 */
+                div[data-testid="stSelectbox"] ul li[aria-selected="true"] {
+                    background: linear-gradient(135deg, #1e88e5 0%, #64b5f6 100%);
+                    color: white;
+                }
+            </style>
+            """, unsafe_allow_html=True)
             
-            # 特征依赖图
-            if data['shap_df'] is not None and data['X_sample'] is not None and data['feature_names']:
-                st.markdown("## 📈 特征依赖分析")
-                st.info("展示每个特征与SHAP值的关系，帮助理解特征值如何影响抑郁风险预测")
-                
-                feature_names_cn = get_feature_names_cn()
-                selected_feature = st.selectbox(
-                    "选择要分析的特征",
-                    options=data['feature_names'],
-                    format_func=lambda x: feature_names_cn.get(x, x),
-                    help="选择一个特征查看其与SHAP值的关系"
-                )
-                
-                # 尝试加载预先生成的依赖图
-                import os
-                shap_dir = data['shap_dir']
-                dependence_image_path = os.path.join(shap_dir, f"shap_dependence_{selected_feature}.png")
-                
-                if os.path.exists(dependence_image_path):
-                    # 直接显示预先生成的图片（图片上已自带标题）
-                    st.image(dependence_image_path)
-                else:
-                    # 如果预先生成的图片不存在，回退到动态生成
-                    st.warning("预先生成的依赖图不存在，正在动态生成...")
-                    # 提取SHAP值
-                    shap_values = data['shap_df'][data['feature_names']].values
-                    
-                    # 生成依赖图
-                    from utils.shap_utils import generate_dependence_plot
-                    fig_dependence = generate_dependence_plot(
-                        shap_values, data['X_sample'], selected_feature, feature_names_cn
+            # 标签页布局
+            tab1, tab2, tab3 = st.tabs(["🌍 全局特征重要性", "📈 特征依赖分析", "⚙️ 技术原理"])
+            
+            with tab1:
+                # 显示特征重要性
+                if data['shap_importance'] is not None:
+                    # 使用Plotly创建交互式条形图
+                    fig = px.bar(
+                        data['shap_importance'],
+                        y='feature_cn',
+                        x='shap_importance',
+                        orientation='h',
+                        title='全局特征重要性',
+                        labels={'feature_cn': '特征名称', 'shap_importance': '平均 |SHAP 值|'},
+                        color='shap_importance',
+                        color_continuous_scale='Viridis'
                     )
-                    if fig_dependence:
-                        st.pyplot(fig_dependence)
+                    fig.update_layout(
+                        height=600,
+                        yaxis={'categoryorder': 'total ascending'},
+                        margin=dict(l=100, r=50, t=80, b=50)
+                    )
+                    st.plotly_chart(fig, use_container_width=True)
+                    
+                    # 显示特征重要性表格
+                    st.dataframe(data['shap_importance'][['feature_cn', 'shap_importance']].rename(columns={'feature_cn': '特征名称', 'shap_importance': 'SHAP重要性'}), use_container_width=True)
+                else:
+                    st.warning("特征重要性文件不存在")
+            
+            with tab2:
+                # 特征依赖图
+                if data['shap_df'] is not None and data['X_sample'] is not None and data['feature_names']:
+                    # 美化的提示信息
+                    st.markdown("""
+                    <div style="background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); 
+                                border-left: 4px solid #1e88e5; 
+                                border-radius: 10px; 
+                                padding: 18px 22px; 
+                                margin-bottom: 25px;
+                                box-shadow: 0 2px 8px rgba(30, 136, 229, 0.1);">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <span style="font-size: 24px;">💡</span>
+                            <div>
+                                <div style="font-weight: 600; color: #0d47a1; font-size: 16px; margin-bottom: 4px;">特征依赖分析</div>
+                                <div style="color: #1565c0; font-size: 15px; line-height: 1.6;">
+                                    展示每个特征与SHAP值的关系，帮助理解特征值如何影响抑郁风险预测
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                    feature_names_cn = get_feature_names_cn()
+                    selected_feature = st.selectbox(
+                        "选择要分析的特征",
+                        options=data['feature_names'],
+                        format_func=lambda x: feature_names_cn.get(x, x),
+                        help="选择一个特征查看其与SHAP值的关系"
+                    )
+                    
+                    # 尝试加载预先生成的依赖图
+                    import os
+                    shap_dir = data['shap_dir']
+                    dependence_image_path = os.path.join(shap_dir, f"shap_dependence_{selected_feature}.png")
+                    
+                    if os.path.exists(dependence_image_path):
+                        # 直接显示预先生成的图片（图片上已自带标题）
+                        st.image(dependence_image_path)
                     else:
-                        st.warning("无法生成依赖图，请检查数据格式")
-            else:
-                st.warning("SHAP值文件或测试数据文件不存在")
+                        # 如果预先生成的图片不存在，回退到动态生成
+                        st.warning("预先生成的依赖图不存在，正在动态生成...")
+                        # 提取SHAP值
+                        shap_values = data['shap_df'][data['feature_names']].values
+                        
+                        # 生成依赖图
+                        from utils.shap_utils import generate_dependence_plot
+                        fig_dependence = generate_dependence_plot(
+                            shap_values, data['X_sample'], selected_feature, feature_names_cn
+                        )
+                        if fig_dependence:
+                            st.pyplot(fig_dependence)
+                        else:
+                            st.warning("无法生成依赖图，请检查数据格式")
+                else:
+                    st.warning("SHAP值文件或测试数据文件不存在")
             
-            # 模型信息
-            st.markdown("## 🛠️ 模型技术原理")
-            st.markdown("""
-            - **模型类型**: CatBoost分类器（梯度提升决策树）
-            - **特征数量**: 13个健康指标
-            - **解释方法**: SHAP (SHapley Additive exPlanations)
-            - **分析样本**: 基于测试集数据
-            - **训练数据**: 中国健康与养老追踪调查(CHARLS)数据
-            """)
-            
-            # 解释说明
-            st.markdown("## 📖 解释说明")
-            st.markdown("""
-            - **SHAP值**: 表示每个特征对预测结果的贡献程度
-            - **正SHAP值**: 增加抑郁风险的因素
-            - **负SHAP值**: 降低抑郁风险的因素
-            - **全局特征重要性**: 基于所有样本的平均SHAP绝对值计算
-            - **特征依赖图**: 展示特征值如何影响SHAP值
-            """)
+            with tab3:
+                # 模型技术原理和解释说明 - 两栏卡片布局
+                col1, col2 = st.columns([1, 1])
+                
+                with col1:
+                    st.markdown("""
+                    <div style="background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); padding: 25px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);">
+                        <div style="display: flex; align-items: center; margin-bottom: 20px;">
+                            <div style="background: linear-gradient(135deg, #a0aec0 0%, #718096 100%); border-radius: 50%; padding: 10px; margin-right: 12px;">
+                                <span style="font-size: 20px;">🛠️</span>
+                            </div>
+                            <h3 style="margin: 0; color: #2c3e50; font-size: 20px;">模型技术原理</h3>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 12px;">
+                            <div style="background: white; padding: 12px 16px; border-radius: 10px; border-left: 4px solid #667eea;">
+                                <div style="color: #667eea; font-weight: 600; margin-bottom: 4px; font-size: 14px;">模型类型</div>
+                                <div style="color: #4a5568; font-size: 15px;">CatBoost分类器（梯度提升决策树）</div>
+                            </div>
+                            <div style="background: white; padding: 12px 16px; border-radius: 10px; border-left: 4px solid #764ba2;">
+                                <div style="color: #764ba2; font-weight: 600; margin-bottom: 4px; font-size: 14px;">特征数量</div>
+                                <div style="color: #4a5568; font-size: 15px;">13个健康指标</div>
+                            </div>
+                            <div style="background: white; padding: 12px 16px; border-radius: 10px; border-left: 4px solid #f093fb;">
+                                <div style="color: #f093fb; font-weight: 600; margin-bottom: 4px; font-size: 14px;">解释方法</div>
+                                <div style="color: #4a5568; font-size: 15px;">SHAP（基于博弈论的模型解释方法）</div>
+                            </div>
+                            <div style="background: white; padding: 12px 16px; border-radius: 10px; border-left: 4px solid #667eea;">
+                                <div style="color: #667eea; font-weight: 600; margin-bottom: 4px; font-size: 14px;">分析样本</div>
+                                <div style="color: #4a5568; font-size: 15px;">基于测试集数据</div>
+                            </div>
+                            <div style="background: white; padding: 12px 16px; border-radius: 10px; border-left: 4px solid #764ba2;">
+                                <div style="color: #764ba2; font-weight: 600; margin-bottom: 4px; font-size: 14px;">训练数据</div>
+                                <div style="color: #4a5568; font-size: 15px;">中国健康与养老追踪调查(CHARLS)数据</div>
+                            </div>
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                with col2:
+                    st.markdown("""
+                    <div style="background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%); padding: 25px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);">
+                        <div style="display: flex; align-items: center; margin-bottom: 20px;">
+                            <div style="background: linear-gradient(135deg, #b794f4 0%, #805ad5 100%); border-radius: 50%; padding: 10px; margin-right: 12px;">
+                                <span style="font-size: 20px;">📖</span>
+                            </div>
+                            <h3 style="margin: 0; color: #2c3e50; font-size: 20px;">解释说明</h3>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 12px;">
+                            <div style="background: rgba(255,255,255,0.8); padding: 12px 16px; border-radius: 10px; border-left: 4px solid #805ad5;">
+                                <div style="color: #805ad5; font-weight: 600; margin-bottom: 4px; font-size: 14px;">SHAP值</div>
+                                <div style="color: #4a5568; font-size: 15px;">表示每个特征对预测结果的贡献程度</div>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.8); padding: 12px 16px; border-radius: 10px; border-left: 4px solid #ff6b6b;">
+                                <div style="color: #ff6b6b; font-weight: 600; margin-bottom: 4px; font-size: 14px;">正SHAP值</div>
+                                <div style="color: #4a5568; font-size: 15px;">增加抑郁风险的因素</div>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.8); padding: 12px 16px; border-radius: 10px; border-left: 4px solid #51cf66;">
+                                <div style="color: #51cf66; font-weight: 600; margin-bottom: 4px; font-size: 14px;">负SHAP值</div>
+                                <div style="color: #4a5568; font-size: 15px;">降低抑郁风险的因素</div>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.8); padding: 12px 16px; border-radius: 10px; border-left: 4px solid #805ad5;">
+                                <div style="color: #805ad5; font-weight: 600; margin-bottom: 4px; font-size: 14px;">全局特征重要性</div>
+                                <div style="color: #4a5568; font-size: 15px;">基于测试集中随机抽取的500例样本计算SHAP值</div>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.8); padding: 12px 16px; border-radius: 10px; border-left: 4px solid #553c9a;">
+                                <div style="color: #553c9a; font-weight: 600; margin-bottom: 4px; font-size: 14px;">特征依赖图</div>
+                                <div style="color: #4a5568; font-size: 15px;">展示特征值如何影响SHAP值</div>
+                            </div>
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
             
         except Exception as e:
             st.error(f"加载SHAP分析结果时发生错误: {str(e)}")
@@ -2059,8 +2567,7 @@ def render_global_explanation_page():
 
 def render_instructions_page():
     """渲染使用说明页面 - 现代化设计"""
-    st.title("ℹ️ 使用说明")
-
+    
     # 系统简介（现代化渐变卡片）
     st.markdown("""
     <div style="background: linear-gradient(135deg, #1e88e5 0%, #64b5f6 100%); padding: 25px; border-radius: 16px; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(30, 136, 229, 0.2);">
@@ -2126,8 +2633,8 @@ def render_instructions_page():
             </div>
             """, unsafe_allow_html=True)
 
-    # 详细填写指南（可折叠部分）
-    st.markdown("## 📋 详细填写指南")
+    # 表单填写指南（可折叠部分）
+    st.markdown("## 📋 表单填写指南")
     guide_container = st.container()
     with guide_container:
         with st.expander("👤 基本信息", expanded=True):
@@ -2281,7 +2788,7 @@ def render_instructions_page():
             <h3 style="margin: 0; color: #2e7d32;">历史记录访问安全规则（仅本地部署版）</h3>
         </div>
         <ul style="color: #444; line-height: 1.6;">
-            <li><strong>🔑 密码验证</strong>：首次访问"📊 历史记录"页面时，需要输入管理员密码。系统初始密码已预设在配置中，您可在历史记录页面修改密码。</li>
+            <li><strong>🔑 密码验证</strong>：首次访问"📁 历史记录"页面时，需要输入管理员密码。系统初始密码已预设在配置中，您可在历史记录页面修改密码。</li>
             <li><strong>⏰ 会话超时</strong>：为保护您的数据安全，如果离开历史记录页面或停止操作<strong>超过10分钟</strong>，系统将自动登出，再次访问需要重新输入密码。</li>
             <li><strong>💾 数据存储位置</strong>：所有历史记录、评估数据、SHAP解释结果均保存在您的<strong>本地数据库文件</strong>中（如SQLite），系统不会通过网络传输任何个人健康信息。</li>
             <li><strong>📤 导出功能</strong>：在历史记录页面，您可以批量导出CSV（原始数据）或PDF（详细报告），导出文件也保存在您自己的设备上。</li>
@@ -2957,7 +3464,7 @@ def main():
     # 根据选择的页面渲染相应内容
     if page == "🔍 风险评估":
         render_assessment_page()
-    elif page == "📊 历史记录":
+    elif page == "📁 历史记录":
         render_history_page()
     elif page == "🧠 模型解释":
         render_global_explanation_page()
