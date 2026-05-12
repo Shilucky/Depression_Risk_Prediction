@@ -2892,6 +2892,15 @@ def load_example_data(high_risk: bool = True):
 def reset_form():
     """重置表单"""
     st.session_state.form_data = DEFAULT_VALUES.copy()
+    
+    # 重置疼痛部位复选框状态
+    for site in PAIN_SITES:
+        st.session_state[f"pain_{site}"] = False
+    
+    # 重置慢性病复选框状态
+    for disease in CHRONIC_DISEASES:
+        st.session_state[f"chronic_{disease}"] = False
+    
     if 'last_prediction' in st.session_state:
         del st.session_state.last_prediction
     if 'show_result' in st.session_state:
